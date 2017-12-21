@@ -248,7 +248,7 @@
     "count_non_member_votes": true,
     "allow_non_member_whitelists": false,
     "witness_pay_per_block": 100000,
-    "worker_budget_per_day": 50000000000,
+    "worker_budget_per_day": "50000000000",
     "max_predicate_opcode": 1,
     "fee_liquidation_threshold": 10000000,
     "accounts_per_fee_scale": 1000,
@@ -392,7 +392,7 @@
   "initial_balances": [{
       "owner": "KRMFAbAx7yuxt725qSZvfwWqkdCwp9ZnUama",
       "asset_symbol": "KRM",
-      "amount": "300000000000000"
+      "amount": "273041401300000"
     }
   ],
   "initial_vesting_balances": [],
