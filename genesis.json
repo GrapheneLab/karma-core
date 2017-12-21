@@ -392,7 +392,7 @@
   "initial_balances": [{
       "owner": "KRMFAbAx7yuxt725qSZvfwWqkdCwp9ZnUama",
       "asset_symbol": "KRM",
-      "amount": "273041401300000"
+      "amount": "273141401300000"
     }
   ],
   "initial_vesting_balances": [],
