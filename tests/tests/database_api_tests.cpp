@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE(is_registered) {
       /***
        * Arrange
        */
-      auto nathan_private_key = generate_private_key("nathan");
+      auto nathan_private_key = generate_private_key("karma");
       public_key_type nathan_public = nathan_private_key.get_public_key();
 
       auto dan_private_key = generate_private_key("dan");
@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(is_registered) {
        * Act
        */
       create_account("dan", dan_private_key.get_public_key()).id;
-      create_account("nathan", nathan_private_key.get_public_key()).id;
+      create_account("karma", nathan_private_key.get_public_key()).id;
       // Unregistered key will not be registered with any account
 
 
@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE( get_potential_signatures_owner_and_active ) {
       fc::ecc::private_key nathan_key2 = fc::ecc::private_key::regenerate(fc::digest("key2"));
       public_key_type pub_key1( nathan_key1.get_public_key() );
       public_key_type pub_key2( nathan_key2.get_public_key() );
-      const account_object& nathan = create_account("nathan", nathan_key1.get_public_key() );
+      const account_object& nathan = create_account("karma", nathan_key1.get_public_key() );
 
       try {
          account_update_operation op;
@@ -109,7 +109,7 @@ BOOST_AUTO_TEST_CASE( get_potential_signatures_other ) {
       fc::ecc::private_key priv_key1 = fc::ecc::private_key::regenerate(fc::digest("key1"));
       public_key_type pub_key1( priv_key1.get_public_key() );
 
-      const account_object& nathan = create_account( "nathan" );
+      const account_object& nathan = create_account( "karma" );
 
       balance_claim_operation op;
       op.deposit_to_account = nathan.id;

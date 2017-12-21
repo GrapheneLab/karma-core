@@ -89,8 +89,8 @@ BOOST_AUTO_TEST_CASE( two_node_network )
       BOOST_TEST_MESSAGE( "Creating transfer tx" );
       graphene::chain::signed_transaction trx;
       {
-         account_id_type nathan_id = db2->get_index_type<account_index>().indices().get<by_name>().find( "nathan" )->id;
-         fc::ecc::private_key nathan_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("nathan")));
+         account_id_type nathan_id = db2->get_index_type<account_index>().indices().get<by_name>().find( "karma" )->id;
+         fc::ecc::private_key nathan_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("karma")));
 
          balance_claim_operation claim_op;
          balance_id_type bid = balance_id_type();
@@ -128,7 +128,7 @@ BOOST_AUTO_TEST_CASE( two_node_network )
       BOOST_CHECK_EQUAL( db2->get_balance( GRAPHENE_NULL_ACCOUNT, asset_id_type() ).amount.value, 1000000 );
 
       BOOST_TEST_MESSAGE( "Generating block on db2" );
-      fc::ecc::private_key committee_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("nathan")));
+      fc::ecc::private_key committee_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("karma")));
 
       auto block_1 = db2->generate_block(
          db2->get_slot_time(1),

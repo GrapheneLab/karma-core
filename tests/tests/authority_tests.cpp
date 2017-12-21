@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE( simple_single_signature )
 { try {
    try {
       fc::ecc::private_key nathan_key = fc::ecc::private_key::generate();
-      const account_object& nathan = create_account("nathan", nathan_key.get_public_key());
+      const account_object& nathan = create_account("karma", nathan_key.get_public_key());
       const asset_object& core = asset_id_type()(db);
       auto old_balance = fund(nathan);
 
@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE( any_two_of_three )
       fc::ecc::private_key nathan_key1 = fc::ecc::private_key::regenerate(fc::digest("key1"));
       fc::ecc::private_key nathan_key2 = fc::ecc::private_key::regenerate(fc::digest("key2"));
       fc::ecc::private_key nathan_key3 = fc::ecc::private_key::regenerate(fc::digest("key3"));
-      const account_object& nathan = create_account("nathan", nathan_key1.get_public_key() );
+      const account_object& nathan = create_account("karma", nathan_key1.get_public_key() );
       const asset_object& core = asset_id_type()(db);
       auto old_balance = fund(nathan);
 
@@ -306,7 +306,7 @@ BOOST_AUTO_TEST_CASE( proposed_single_account )
       fc::ecc::private_key nathan_key3 = fc::ecc::private_key::regenerate(fc::digest("key3"));
 
       const account_object& moneyman = create_account("moneyman", init_account_pub_key);
-      const account_object& nathan = get_account("nathan");
+      const account_object& nathan = get_account("karma");
       const asset_object& core = asset_id_type()(db);
 
       transfer(account_id_type()(db), moneyman, core.amount(1000000));
@@ -394,7 +394,7 @@ BOOST_AUTO_TEST_CASE( committee_authority )
 { try {
    fc::ecc::private_key nathan_key = fc::ecc::private_key::generate();
    fc::ecc::private_key committee_key = init_account_priv_key;
-   const account_object nathan = create_account("nathan", nathan_key.get_public_key());
+   const account_object nathan = create_account("karma", nathan_key.get_public_key());
    const auto& global_params = db.get_global_properties().parameters;
 
    generate_block();
@@ -488,10 +488,10 @@ BOOST_FIXTURE_TEST_CASE( fired_committee_members, database_fixture )
    fc::ecc::private_key committee_member_key = fc::ecc::private_key::generate();
 
    //Meet nathan. He has a little money.
-   const account_object* nathan = &create_account("nathan");
+   const account_object* nathan = &create_account("karma");
    transfer(account_id_type()(db), *nathan, asset(5000));
    generate_block();
-   nathan = &get_account("nathan");
+   nathan = &get_account("karma");
    flat_set<vote_id_type> committee_members;
 
    /*
@@ -551,7 +551,7 @@ BOOST_FIXTURE_TEST_CASE( fired_committee_members, database_fixture )
    //Yay! The proposal to give nathan more money is authorized.
    BOOST_REQUIRE(pid(db).is_authorized_to_execute(db));
 
-   nathan = &get_account("nathan");
+   nathan = &get_account("karma");
    // no money yet
    BOOST_REQUIRE_EQUAL(get_balance(*nathan, asset_id_type()(db)), 5000);
 
@@ -589,9 +589,9 @@ BOOST_FIXTURE_TEST_CASE( proposal_two_accounts, database_fixture )
 { try {
    generate_block();
 
-   auto nathan_key = generate_private_key("nathan");
+   auto nathan_key = generate_private_key("karma");
    auto dan_key = generate_private_key("dan");
-   const account_object& nathan = create_account("nathan", nathan_key.get_public_key() );
+   const account_object& nathan = create_account("karma", nathan_key.get_public_key() );
    const account_object& dan = create_account("dan", dan_key.get_public_key() );
 
    transfer(account_id_type()(db), nathan, asset(100000));
@@ -650,9 +650,9 @@ BOOST_FIXTURE_TEST_CASE( proposal_delete, database_fixture )
 { try {
    generate_block();
 
-   auto nathan_key = generate_private_key("nathan");
+   auto nathan_key = generate_private_key("karma");
    auto dan_key = generate_private_key("dan");
-   const account_object& nathan = create_account("nathan", nathan_key.get_public_key() );
+   const account_object& nathan = create_account("karma", nathan_key.get_public_key() );
    const account_object& dan = create_account("dan", dan_key.get_public_key() );
 
    transfer(account_id_type()(db), nathan, asset(100000));
@@ -721,9 +721,9 @@ BOOST_FIXTURE_TEST_CASE( proposal_owner_authority_delete, database_fixture )
 { try {
    generate_block();
 
-   auto nathan_key = generate_private_key("nathan");
+   auto nathan_key = generate_private_key("karma");
    auto dan_key = generate_private_key("dan");
-   const account_object& nathan = create_account("nathan", nathan_key.get_public_key() );
+   const account_object& nathan = create_account("karma", nathan_key.get_public_key() );
    const account_object& dan = create_account("dan", dan_key.get_public_key() );
 
    transfer(account_id_type()(db), nathan, asset(100000));
@@ -798,9 +798,9 @@ BOOST_FIXTURE_TEST_CASE( proposal_owner_authority_complete, database_fixture )
 { try {
    generate_block();
 
-   auto nathan_key = generate_private_key("nathan");
+   auto nathan_key = generate_private_key("karma");
    auto dan_key = generate_private_key("dan");
-   const account_object& nathan = create_account("nathan", nathan_key.get_public_key() );
+   const account_object& nathan = create_account("karma", nathan_key.get_public_key() );
    const account_object& dan = create_account("dan", dan_key.get_public_key() );
 
    transfer(account_id_type()(db), nathan, asset(100000));

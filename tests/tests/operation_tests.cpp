@@ -376,10 +376,10 @@ BOOST_AUTO_TEST_CASE( create_account_test )
       trx.validate();
       PUSH_TX( db, trx, ~0 );
 
-      const account_object& nathan_account = *db.get_index_type<account_index>().indices().get<by_name>().find("nathan");
+      const account_object& nathan_account = *db.get_index_type<account_index>().indices().get<by_name>().find("karma");
       BOOST_CHECK(nathan_account.id.space() == protocol_ids);
       BOOST_CHECK(nathan_account.id.type() == account_object_type);
-      BOOST_CHECK(nathan_account.name == "nathan");
+      BOOST_CHECK(nathan_account.name == "karma");
 
       BOOST_REQUIRE(nathan_account.owner.num_auths() == 1);
       BOOST_CHECK(nathan_account.owner.key_auths.at(committee_key) == 123);
@@ -400,7 +400,7 @@ BOOST_AUTO_TEST_CASE( create_account_test )
 BOOST_AUTO_TEST_CASE( update_account )
 {
    try {
-      const account_object& nathan = create_account("nathan", init_account_pub_key);
+      const account_object& nathan = create_account("karma", init_account_pub_key);
       const fc::ecc::private_key nathan_new_key = fc::ecc::private_key::generate();
       const public_key_type key_id = nathan_new_key.get_public_key();
       const auto& active_committee_members = db.get_global_properties().active_committee_members;
@@ -455,7 +455,7 @@ BOOST_AUTO_TEST_CASE( transfer_core_asset )
       account_id_type committee_account;
       asset committee_balance = db.get_balance(account_id_type(), asset_id_type());
 
-      const account_object& nathan_account = *db.get_index_type<account_index>().indices().get<by_name>().find("nathan");
+      const account_object& nathan_account = *db.get_index_type<account_index>().indices().get<by_name>().find("karma");
       transfer_operation top;
       top.from = committee_account;
       top.to = nathan_account.id;
@@ -569,7 +569,7 @@ BOOST_AUTO_TEST_CASE( update_mia )
       }
 
       trx.operations.clear();
-      auto nathan = create_account("nathan");
+      auto nathan = create_account("karma");
       op.issuer = account_id_type();
       op.new_issuer = nathan.id;
       trx.operations.emplace_back(op);
@@ -645,7 +645,7 @@ BOOST_AUTO_TEST_CASE( update_uia )
    try {
       INVOKE(create_uia);
       const auto& test = get_asset(UIA_TEST_SYMBOL);
-      const auto& nathan = create_account("nathan");
+      const auto& nathan = create_account("karma");
 
       asset_update_operation op;
       op.issuer = test.issuer;
@@ -722,7 +722,7 @@ BOOST_AUTO_TEST_CASE( issue_uia )
       INVOKE(create_account_test);
 
       const asset_object& test_asset = *db.get_index_type<asset_index>().indices().get<by_symbol>().find(UIA_TEST_SYMBOL);
-      const account_object& nathan_account = *db.get_index_type<account_index>().indices().get<by_name>().find("nathan");
+      const account_object& nathan_account = *db.get_index_type<account_index>().indices().get<by_name>().find("karma");
 
       asset_issue_operation op;
       op.issuer = test_asset.issuer;
@@ -761,7 +761,7 @@ BOOST_AUTO_TEST_CASE( transfer_uia )
       INVOKE(issue_uia);
 
       const asset_object& uia = *db.get_index_type<asset_index>().indices().get<by_symbol>().find(UIA_TEST_SYMBOL);
-      const account_object& nathan = *db.get_index_type<account_index>().indices().get<by_name>().find("nathan");
+      const account_object& nathan = *db.get_index_type<account_index>().indices().get<by_name>().find("karma");
       const account_object& committee = account_id_type()(db);
 
       BOOST_CHECK_EQUAL(get_balance(nathan, uia), 10000000);
@@ -790,7 +790,7 @@ BOOST_AUTO_TEST_CASE( create_buy_uia_multiple_match_new )
    INVOKE( issue_uia );
    const asset_object&   core_asset     = get_asset( UIA_TEST_SYMBOL );
    const asset_object&   test_asset     = get_asset( GRAPHENE_SYMBOL );
-   const account_object& nathan_account = get_account( "nathan" );
+   const account_object& nathan_account = get_account( "karma" );
    const account_object& buyer_account  = create_account( "buyer" );
    const account_object& seller_account = create_account( "seller" );
 
@@ -830,7 +830,7 @@ BOOST_AUTO_TEST_CASE( create_buy_exact_match_uia )
    INVOKE( issue_uia );
    const asset_object&   test_asset     = get_asset( UIA_TEST_SYMBOL );
    const asset_object&   core_asset     = get_asset( GRAPHENE_SYMBOL );
-   const account_object& nathan_account = get_account( "nathan" );
+   const account_object& nathan_account = get_account( "karma" );
    const account_object& buyer_account  = create_account( "buyer" );
    const account_object& seller_account = create_account( "seller" );
 
@@ -871,7 +871,7 @@ BOOST_AUTO_TEST_CASE( create_buy_uia_multiple_match_new_reverse )
    INVOKE( issue_uia );
    const asset_object&   test_asset     = get_asset( UIA_TEST_SYMBOL );
    const asset_object&   core_asset     = get_asset( GRAPHENE_SYMBOL );
-   const account_object& nathan_account = get_account( "nathan" );
+   const account_object& nathan_account = get_account( "karma" );
    const account_object& buyer_account  = create_account( "buyer" );
    const account_object& seller_account = create_account( "seller" );
 
@@ -911,7 +911,7 @@ BOOST_AUTO_TEST_CASE( create_buy_uia_multiple_match_new_reverse_fract )
    INVOKE( issue_uia );
    const asset_object&   test_asset     = get_asset( UIA_TEST_SYMBOL );
    const asset_object&   core_asset     = get_asset( GRAPHENE_SYMBOL );
-   const account_object& nathan_account = get_account( "nathan" );
+   const account_object& nathan_account = get_account( "karma" );
    const account_object& buyer_account  = create_account( "buyer" );
    const account_object& seller_account = create_account( "seller" );
 
@@ -959,7 +959,7 @@ BOOST_AUTO_TEST_CASE( uia_fees )
 
       const asset_object& test_asset = get_asset(UIA_TEST_SYMBOL);
       const asset_dynamic_data_object& asset_dynamic = test_asset.dynamic_asset_data_id(db);
-      const account_object& nathan_account = get_account("nathan");
+      const account_object& nathan_account = get_account("karma");
       const account_object& committee_account = account_id_type()(db);
       const share_type prec = asset::scaled_precision( asset_id_type()(db).precision );
 
@@ -1115,7 +1115,7 @@ BOOST_AUTO_TEST_CASE( trade_amount_equals_zero )
       const asset_object& core = get_asset( GRAPHENE_SYMBOL );
       const asset_id_type core_id = core.id;
       const account_object& core_seller = create_account( "shorter1" );
-      const account_object& core_buyer = get_account("nathan");
+      const account_object& core_buyer = get_account("karma");
 
       transfer( committee_account(db), core_seller, asset( 100000000 ) );
 
@@ -1158,7 +1158,7 @@ BOOST_AUTO_TEST_CASE( trade_amount_equals_zero )
 BOOST_AUTO_TEST_CASE( limit_order_fill_or_kill )
 { try {
    INVOKE(issue_uia);
-   const account_object& nathan = get_account("nathan");
+   const account_object& nathan = get_account("karma");
    const asset_object& test = get_asset(UIA_TEST_SYMBOL);
    const asset_object& core = asset_id_type()(db);
 
@@ -1194,8 +1194,8 @@ BOOST_AUTO_TEST_CASE( witness_pay_test )
    generate_block();
 
    // Make an account and upgrade it to prime, so that witnesses get some pay
-   create_account("nathan", init_account_pub_key);
-   transfer(account_id_type()(db), get_account("nathan"), asset(20000*prec));
+   create_account("karma", init_account_pub_key);
+   transfer(account_id_type()(db), get_account("karma"), asset(20000*prec));
    transfer(account_id_type()(db), get_account("init3"), asset(20*prec));
    generate_block();
 
@@ -1209,7 +1209,7 @@ BOOST_AUTO_TEST_CASE( witness_pay_test )
 
    const auto block_interval = db.get_global_properties().parameters.block_interval;
    const asset_object* core = &asset_id_type()(db);
-   const account_object* nathan = &get_account("nathan");
+   const account_object* nathan = &get_account("karma");
    enable_fees();
    BOOST_CHECK_GT(db.current_fee_schedule().get<account_upgrade_operation>().membership_lifetime_fee, 0);
    // Based on the size of the reserve fund later in the test, the witness budget will be set to this value
@@ -1250,7 +1250,7 @@ BOOST_AUTO_TEST_CASE( witness_pay_test )
    BOOST_CHECK( get_balance(*nathan, *core) == 20000*prec - account_upgrade_operation::fee_parameters_type().membership_lifetime_fee );;
 
    generate_block();
-   nathan = &get_account("nathan");
+   nathan = &get_account("karma");
    core = &asset_id_type()(db);
    BOOST_CHECK_EQUAL( last_witness_vbo_balance().value, 0 );
 

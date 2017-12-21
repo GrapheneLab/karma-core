@@ -408,7 +408,7 @@ BOOST_AUTO_TEST_CASE( undo_pending )
          account_id_type nathan_id = account_idx.get_next_id();
          account_create_operation cop;
          cop.registrar = GRAPHENE_TEMP_ACCOUNT;
-         cop.name = "nathan";
+         cop.name = "karma";
          cop.owner = authority(1, init_account_pub_key, 1);
          cop.active = cop.owner;
          trx.operations.push_back(cop);
@@ -417,7 +417,7 @@ BOOST_AUTO_TEST_CASE( undo_pending )
 
          auto b = db.generate_block(db.get_slot_time(1), db.get_scheduled_witness(1), init_account_priv_key, database::skip_nothing);
 
-         BOOST_CHECK(nathan_id(db).name == "nathan");
+         BOOST_CHECK(nathan_id(db).name == "karma");
 
          trx.clear();
          set_expiration( db, trx );
@@ -462,7 +462,7 @@ BOOST_AUTO_TEST_CASE( switch_forks_undo_create )
       account_id_type nathan_id = account_idx.get_next_id();
       account_create_operation cop;
       cop.registrar = GRAPHENE_TEMP_ACCOUNT;
-      cop.name = "nathan";
+      cop.name = "karma";
       cop.owner = authority(1, init_account_pub_key, 1);
       cop.active = cop.owner;
       trx.operations.push_back(cop);
@@ -475,7 +475,7 @@ BOOST_AUTO_TEST_CASE( switch_forks_undo_create )
       auto aw = db1.get_global_properties().active_witnesses;
       auto b = db1.generate_block(db1.get_slot_time(1), db1.get_scheduled_witness(1), init_account_priv_key, database::skip_nothing);
 
-      BOOST_CHECK(nathan_id(db1).name == "nathan");
+      BOOST_CHECK(nathan_id(db1).name == "karma");
 
       b = db2.generate_block(db2.get_slot_time(1), db2.get_scheduled_witness(1), init_account_priv_key, database::skip_nothing);
       db1.push_block(b);
@@ -493,8 +493,8 @@ BOOST_AUTO_TEST_CASE( switch_forks_undo_create )
       b = db2.generate_block(db2.get_slot_time(1), db2.get_scheduled_witness(1), init_account_priv_key, database::skip_nothing);
       db1.push_block(b);
 
-      BOOST_CHECK(nathan_id(db1).name == "nathan");
-      BOOST_CHECK(nathan_id(db2).name == "nathan");
+      BOOST_CHECK(nathan_id(db1).name == "karma");
+      BOOST_CHECK(nathan_id(db2).name == "karma");
    } catch (fc::exception& e) {
       edump((e.to_detail_string()));
       throw;
@@ -522,7 +522,7 @@ BOOST_AUTO_TEST_CASE( duplicate_transactions )
       set_expiration( db1, trx );
       account_id_type nathan_id = account_idx.get_next_id();
       account_create_operation cop;
-      cop.name = "nathan";
+      cop.name = "karma";
       cop.owner = authority(1, init_account_pub_key, 1);
       cop.active = cop.owner;
       trx.operations.push_back(cop);
@@ -576,7 +576,7 @@ BOOST_AUTO_TEST_CASE( tapos )
       account_id_type nathan_id = account_idx.get_next_id();
       account_create_operation cop;
       cop.registrar = init1.id;
-      cop.name = "nathan";
+      cop.name = "karma";
       cop.owner = authority(1, init_account_pub_key, 1);
       cop.active = cop.owner;
       trx.operations.push_back(cop);
@@ -676,7 +676,7 @@ BOOST_FIXTURE_TEST_CASE( maintenance_interval, database_fixture )
       fc::time_point_sec maintenence_time = db.get_dynamic_global_properties().next_maintenance_time;
       BOOST_CHECK_GT(maintenence_time.sec_since_epoch(), db.head_block_time().sec_since_epoch());
       auto initial_properties = db.get_global_properties();
-      const account_object& nathan = create_account("nathan");
+      const account_object& nathan = create_account("karma");
       upgrade_to_lifetime_member(nathan);
       const committee_member_object nathans_committee_member = create_committee_member(nathan);
       {
@@ -724,7 +724,7 @@ BOOST_FIXTURE_TEST_CASE( limit_order_expiration, database_fixture )
 
    auto* test = &create_bitasset("MIATEST");
    auto* core = &asset_id_type()(db);
-   auto* nathan = &create_account("nathan");
+   auto* nathan = &create_account("karma");
    auto* committee = &account_id_type()(db);
 
    transfer(*committee, *nathan, core->amount(50000));
@@ -753,7 +753,7 @@ BOOST_FIXTURE_TEST_CASE( limit_order_expiration, database_fixture )
    generate_blocks(op.expiration, false);
    test = &get_asset("MIATEST");
    core = &asset_id_type()(db);
-   nathan = &get_account("nathan");
+   nathan = &get_account("karma");
    committee = &account_id_type()(db);
 
    BOOST_CHECK(db.find_object(id) == nullptr);

@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE( issue_whitelist_uia )
       account_id_type izzy_id = create_account("izzy").id;
       const asset_id_type uia_id = create_user_issued_asset(
          "ADVANCED", izzy_id(db), white_list ).id;
-      account_id_type nathan_id = create_account("nathan").id;
+      account_id_type nathan_id = create_account("karma").id;
       account_id_type vikram_id = create_account("vikram").id;
       trx.clear();
 
@@ -219,7 +219,7 @@ BOOST_AUTO_TEST_CASE( transfer_whitelist_uia )
    try {
       INVOKE(issue_whitelist_uia);
       const asset_object& advanced = get_asset("ADVANCED");
-      const account_object& nathan = get_account("nathan");
+      const account_object& nathan = get_account("karma");
       const account_object& dan = create_account("dan");
       account_id_type izzy_id = get_account("izzy").id;
       upgrade_to_lifetime_member(dan);

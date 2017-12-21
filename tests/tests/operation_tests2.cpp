@@ -108,9 +108,9 @@ withdrawal_period_descriptor current_period(const withdraw_permission_object& pe
  */
 BOOST_AUTO_TEST_CASE( withdraw_permission_create_before_hardfork_23 )
 { try {
-   auto nathan_private_key = generate_private_key("nathan");
+   auto nathan_private_key = generate_private_key("karma");
    auto dan_private_key = generate_private_key("dan");
-   account_id_type nathan_id = create_account("nathan", nathan_private_key.get_public_key()).id;
+   account_id_type nathan_id = create_account("karma", nathan_private_key.get_public_key()).id;
    account_id_type dan_id = create_account("dan", dan_private_key.get_public_key()).id;
 
    transfer(account_id_type(), nathan_id, asset(1000));
@@ -153,9 +153,9 @@ BOOST_AUTO_TEST_CASE( withdraw_permission_create_before_hardfork_23 )
  */
 BOOST_AUTO_TEST_CASE( withdraw_permission_create_after_hardfork_23 )
 { try {
-   auto nathan_private_key = generate_private_key("nathan");
+   auto nathan_private_key = generate_private_key("karma");
    auto dan_private_key = generate_private_key("dan");
-   account_id_type nathan_id = create_account("nathan", nathan_private_key.get_public_key()).id;
+   account_id_type nathan_id = create_account("karma", nathan_private_key.get_public_key()).id;
    account_id_type dan_id = create_account("dan", dan_private_key.get_public_key()).id;
 
    transfer(account_id_type(), nathan_id, asset(1000));
@@ -202,9 +202,9 @@ BOOST_AUTO_TEST_CASE( withdraw_permission_test_before_hardfork_23 )
 { try {
       INVOKE(withdraw_permission_create_before_hardfork_23);
 
-      auto nathan_private_key = generate_private_key("nathan");
+      auto nathan_private_key = generate_private_key("karma");
       auto dan_private_key = generate_private_key("dan");
-      account_id_type nathan_id = get_account("nathan").id;
+      account_id_type nathan_id = get_account("karma").id;
       account_id_type dan_id = get_account("dan").id;
       withdraw_permission_id_type permit;
       set_expiration( db, trx );
@@ -364,9 +364,9 @@ BOOST_AUTO_TEST_CASE( withdraw_permission_test_after_hardfork_23 )
 { try {
    INVOKE(withdraw_permission_create_after_hardfork_23);
 
-   auto nathan_private_key = generate_private_key("nathan");
+   auto nathan_private_key = generate_private_key("karma");
    auto dan_private_key = generate_private_key("dan");
-   account_id_type nathan_id = get_account("nathan").id;
+   account_id_type nathan_id = get_account("karma").id;
    account_id_type dan_id = get_account("dan").id;
    withdraw_permission_id_type permit;
    set_expiration( db, trx );
@@ -508,9 +508,9 @@ BOOST_AUTO_TEST_CASE( withdraw_permission_nominal_case )
 { try {
    INVOKE(withdraw_permission_create_before_hardfork_23);
 
-   auto nathan_private_key = generate_private_key("nathan");
+   auto nathan_private_key = generate_private_key("karma");
    auto dan_private_key = generate_private_key("dan");
-   account_id_type nathan_id = get_account("nathan").id;
+   account_id_type nathan_id = get_account("karma").id;
    account_id_type dan_id = get_account("dan").id;
    withdraw_permission_id_type permit;
 
@@ -572,9 +572,9 @@ BOOST_AUTO_TEST_CASE( withdraw_permission_incremental_case )
     time_point_sec expected_first_period_start_time = HARDFORK_23_TIME + db.get_global_properties().parameters.block_interval*5; // Hard-coded to synchronize with withdraw_permission_create_after_hardfork_23()
     uint64_t expected_period_duration_seconds = fc::hours(1).to_seconds(); // Hard-coded to synchronize with withdraw_permission_create_after_hardfork_23()
 
-    auto nathan_private_key = generate_private_key("nathan");
+    auto nathan_private_key = generate_private_key("karma");
     auto dan_private_key = generate_private_key("dan");
-    account_id_type nathan_id = get_account("nathan").id;
+    account_id_type nathan_id = get_account("karma").id;
     account_id_type dan_id = get_account("dan").id;
     withdraw_permission_id_type permit;
 
@@ -774,8 +774,8 @@ BOOST_AUTO_TEST_CASE( withdraw_permission_update )
 { try {
    INVOKE(withdraw_permission_create_before_hardfork_23);
 
-   auto nathan_private_key = generate_private_key("nathan");
-   account_id_type nathan_id = get_account("nathan").id;
+   auto nathan_private_key = generate_private_key("karma");
+   account_id_type nathan_id = get_account("karma").id;
    account_id_type dan_id = get_account("dan").id;
    withdraw_permission_id_type permit;
    set_expiration( db, trx );
@@ -819,10 +819,10 @@ BOOST_AUTO_TEST_CASE( withdraw_permission_delete )
 
    withdraw_permission_delete_operation op;
    op.authorized_account = get_account("dan").id;
-   op.withdraw_from_account = get_account("nathan").id;
+   op.withdraw_from_account = get_account("karma").id;
    set_expiration( db, trx );
    trx.operations.push_back(op);
-   sign( trx, generate_private_key("nathan" ));
+   sign( trx, generate_private_key("karma" ));
    PUSH_TX( db, trx );
 } FC_LOG_AND_RETHROW() }
 
@@ -1524,15 +1524,15 @@ BOOST_AUTO_TEST_CASE( assert_op_test )
 {
    try {
    // create some objects
-   auto nathan_private_key = generate_private_key("nathan");
+   auto nathan_private_key = generate_private_key("karma");
    public_key_type nathan_public_key = nathan_private_key.get_public_key();
-   account_id_type nathan_id = create_account("nathan", nathan_public_key).id;
+   account_id_type nathan_id = create_account("karma", nathan_public_key).id;
 
    assert_operation op;
 
    // nathan checks that his public key is equal to the given value.
    op.fee_paying_account = nathan_id;
-   op.predicates.emplace_back(account_name_eq_lit_predicate{ nathan_id, "nathan" });
+   op.predicates.emplace_back(account_name_eq_lit_predicate{ nathan_id, "karma" });
    trx.operations.push_back(op);
    sign( trx, nathan_private_key );
    PUSH_TX( db, trx );

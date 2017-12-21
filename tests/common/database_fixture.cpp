@@ -343,7 +343,7 @@ void database_fixture::generate_blocks(fc::time_point_sec timestamp, bool miss_i
 }
 
 account_create_operation database_fixture::make_account(
-   const std::string& name /* = "nathan" */,
+   const std::string& name /* = "karma" */,
    public_key_type key /* = key_id_type() */
    )
 { try {
