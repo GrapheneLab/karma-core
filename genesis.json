@@ -1,12 +1,12 @@
 {
   "initial_timestamp": "2017-12-19T17:53:50",
-  "max_core_supply": "1000000000000000",
+  "max_core_supply": "300000000000000",
   "initial_parameters": {
     "current_fees": {
       "parameters": [[
           0,{
-            "fee": 2000000,
-            "price_per_kbyte": 1000000
+            "fee": 50000,
+            "price_per_kbyte": 10000
           }
         ],[
           1,{
@@ -18,7 +18,7 @@
           }
         ],[
           3,{
-            "fee": 2000000
+            "fee": 500000
           }
         ],[
           4,{}
@@ -30,8 +30,8 @@
           }
         ],[
           6,{
-            "fee": 2000000,
-            "price_per_kbyte": 100000
+            "fee": 10000,
+            "price_per_kbyte": 10000
           }
         ],[
           7,{
@@ -39,8 +39,8 @@
           }
         ],[
           8,{
-            "membership_annual_fee": 200000000,
-            "membership_lifetime_fee": 1000000000
+            "membership_annual_fee": 100000000000,
+            "membership_lifetime_fee": 100000000
           }
         ],[
           9,{
@@ -48,27 +48,27 @@
           }
         ],[
           10,{
-            "symbol3": "50000000000",
-            "symbol4": "30000000000",
-            "long_symbol": 500000000,
+            "symbol3": "200000000",
+            "symbol4": "100000000",
+            "long_symbol": 50000000,
             "price_per_kbyte": 10
           }
         ],[
           11,{
-            "fee": 50000000,
+            "fee": 10000000,
             "price_per_kbyte": 10
           }
         ],[
           12,{
-            "fee": 50000000
+            "fee": 10000000
           }
         ],[
           13,{
-            "fee": 50000000
+            "fee": 1000000
           }
         ],[
           14,{
-            "fee": 2000000,
+            "fee": 100000,
             "price_per_kbyte": 100000
           }
         ],[
@@ -81,7 +81,7 @@
           }
         ],[
           17,{
-            "fee": 10000000
+            "fee": 100000
           }
         ],[
           18,{
@@ -93,7 +93,7 @@
           }
         ],[
           20,{
-            "fee": 500000000
+            "fee": 20000000
           }
         ],[
           21,{
@@ -132,7 +132,7 @@
           }
         ],[
           29,{
-            "fee": 500000000
+            "fee": 20000000
           }
         ],[
           30,{
@@ -152,7 +152,7 @@
           }
         ],[
           34,{
-            "fee": 500000000
+            "fee": 10000000
           }
         ],[
           35,{
@@ -200,12 +200,12 @@
           46,{}
         ],[
           47,{
-            "fee": 100000,
+            "fee": 1000000,
             "price_per_kbyte": 10
           }
         ],[
           48,{
-            "fee": 100000,
+            "fee": 500000,
             "price_per_kbyte": 10
           }
         ],[
@@ -220,9 +220,9 @@
           }
         ],[
           51,{
-            "fee": 100000,
+            "fee": 500000,
             "price_per_kbyte": 10
-          }
+          } 
         ]
       ],
       "scale": 10000
@@ -243,12 +243,12 @@
     "reserve_percent_of_fee": 2000,
     "network_percent_of_fee": 2000,
     "lifetime_referrer_percent_of_fee": 3000,
-    "cashback_vesting_period_seconds": 31536000,
+    "cashback_vesting_period_seconds": 2592000,
     "cashback_vesting_threshold": 10000000,
     "count_non_member_votes": true,
     "allow_non_member_whitelists": false,
-    "witness_pay_per_block": 1000000,
-    "worker_budget_per_day": "50000000000",
+    "witness_pay_per_block": 100000,
+    "worker_budget_per_day": 50000000000,
     "max_predicate_opcode": 1,
     "fee_liquidation_threshold": 10000000,
     "accounts_per_fee_scale": 1000,
@@ -315,6 +315,76 @@
       "name": "karma",
       "owner_key": "KRM7R8GqoaAECpBUEwg7WVqToM4121L3FeaSuzYBUbgcC6jaWDCUY",
       "active_key": "KRM7R8GqoaAECpBUEwg7WVqToM4121L3FeaSuzYBUbgcC6jaWDCUY",
+      "is_lifetime_member": true
+    },{
+      "name": "bitfinex",
+      "owner_key": "KRM7R8GqoaAECpBUEwg7WVqToM4121L3FeaSuzYBUbgcC6jaWDCUY",
+      "active_key": "KRM7R8GqoaAECpBUEwg7WVqToM4121L3FeaSuzYBUbgcC6jaWDCUY",
+      "is_lifetime_member": false
+    },{
+      "name": "binance",
+      "owner_key": "KRM7R8GqoaAECpBUEwg7WVqToM4121L3FeaSuzYBUbgcC6jaWDCUY",
+      "active_key": "KRM7R8GqoaAECpBUEwg7WVqToM4121L3FeaSuzYBUbgcC6jaWDCUY",
+      "is_lifetime_member": false
+    },{
+      "name": "bithumb",
+      "owner_key": "KRM7R8GqoaAECpBUEwg7WVqToM4121L3FeaSuzYBUbgcC6jaWDCUY",
+      "active_key": "KRM7R8GqoaAECpBUEwg7WVqToM4121L3FeaSuzYBUbgcC6jaWDCUY",
+      "is_lifetime_member": false
+    },{
+      "name": "bitstamp",
+      "owner_key": "KRM7R8GqoaAECpBUEwg7WVqToM4121L3FeaSuzYBUbgcC6jaWDCUY",
+      "active_key": "KRM7R8GqoaAECpBUEwg7WVqToM4121L3FeaSuzYBUbgcC6jaWDCUY",
+      "is_lifetime_member": false
+    },{
+      "name": "bittrex",
+      "owner_key": "KRM7R8GqoaAECpBUEwg7WVqToM4121L3FeaSuzYBUbgcC6jaWDCUY",
+      "active_key": "KRM7R8GqoaAECpBUEwg7WVqToM4121L3FeaSuzYBUbgcC6jaWDCUY",
+      "is_lifetime_member": false
+    },{
+      "name": "coinlink",
+      "owner_key": "KRM7R8GqoaAECpBUEwg7WVqToM4121L3FeaSuzYBUbgcC6jaWDCUY",
+      "active_key": "KRM7R8GqoaAECpBUEwg7WVqToM4121L3FeaSuzYBUbgcC6jaWDCUY",
+      "is_lifetime_member": false
+    },{
+      "name": "coinnest",
+      "owner_key": "KRM7R8GqoaAECpBUEwg7WVqToM4121L3FeaSuzYBUbgcC6jaWDCUY",
+      "active_key": "KRM7R8GqoaAECpBUEwg7WVqToM4121L3FeaSuzYBUbgcC6jaWDCUY",
+      "is_lifetime_member": false
+    },{
+      "name": "coinone",
+      "owner_key": "KRM7R8GqoaAECpBUEwg7WVqToM4121L3FeaSuzYBUbgcC6jaWDCUY",
+      "active_key": "KRM7R8GqoaAECpBUEwg7WVqToM4121L3FeaSuzYBUbgcC6jaWDCUY",
+      "is_lifetime_member": false
+    },{
+      "name": "gdax",
+      "owner_key": "KRM7R8GqoaAECpBUEwg7WVqToM4121L3FeaSuzYBUbgcC6jaWDCUY",
+      "active_key": "KRM7R8GqoaAECpBUEwg7WVqToM4121L3FeaSuzYBUbgcC6jaWDCUY",
+      "is_lifetime_member": false
+    },{
+      "name": "hitbtc",
+      "owner_key": "KRM7R8GqoaAECpBUEwg7WVqToM4121L3FeaSuzYBUbgcC6jaWDCUY",
+      "active_key": "KRM7R8GqoaAECpBUEwg7WVqToM4121L3FeaSuzYBUbgcC6jaWDCUY",
+      "is_lifetime_member": false
+    },{
+      "name": "livecoin",
+      "owner_key": "KRM7R8GqoaAECpBUEwg7WVqToM4121L3FeaSuzYBUbgcC6jaWDCUY",
+      "active_key": "KRM7R8GqoaAECpBUEwg7WVqToM4121L3FeaSuzYBUbgcC6jaWDCUY",
+      "is_lifetime_member": false
+    },{
+      "name": "okex",
+      "owner_key": "KRM7R8GqoaAECpBUEwg7WVqToM4121L3FeaSuzYBUbgcC6jaWDCUY",
+      "active_key": "KRM7R8GqoaAECpBUEwg7WVqToM4121L3FeaSuzYBUbgcC6jaWDCUY",
+      "is_lifetime_member": false
+    },{
+      "name": "poloniex",
+      "owner_key": "KRM7R8GqoaAECpBUEwg7WVqToM4121L3FeaSuzYBUbgcC6jaWDCUY",
+      "active_key": "KRM7R8GqoaAECpBUEwg7WVqToM4121L3FeaSuzYBUbgcC6jaWDCUY",
+      "is_lifetime_member": false
+    },{
+      "name": "upbit",
+      "owner_key": "KRM7R8GqoaAECpBUEwg7WVqToM4121L3FeaSuzYBUbgcC6jaWDCUY",
+      "active_key": "KRM7R8GqoaAECpBUEwg7WVqToM4121L3FeaSuzYBUbgcC6jaWDCUY",
       "is_lifetime_member": false
     }
   ],
@@ -322,7 +392,7 @@
   "initial_balances": [{
       "owner": "KRMFAbAx7yuxt725qSZvfwWqkdCwp9ZnUama",
       "asset_symbol": "KRM",
-      "amount": "1000000000000000"
+      "amount": "300000000000000"
     }
   ],
   "initial_vesting_balances": [],
