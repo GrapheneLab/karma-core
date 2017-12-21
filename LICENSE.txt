@@ -1,5 +1,6 @@
 Copyright (c) 2015-2016 Cryptonomex Inc. <contact@cryptonomex.com>
 Copyright (c) 2015-2017 contributors <CONTRIBUTORS.txt>
+Copyright (c) 2017 GrapheneLab <info@graphenelab.org>
 
 The MIT License
 
