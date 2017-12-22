@@ -112,6 +112,45 @@ namespace graphene { namespace chain {
          void  adjust_balance(const asset& delta);
    };
 
+   /**
+       * KYC data
+       */
+      struct personal_info
+      {
+         std::string login;
+         std::string email;
+         std::string firstName;
+         std::string lastName;
+         std::string facebook;
+         std::string mobile;
+         std::string taxResidence;
+      };
+
+      /**
+       * Bank account
+       */
+      struct bank_account
+      {
+         std::string bankName;
+         std::string bankSwift;
+         std::string bankAccount;
+         std::string bankBenificiary;
+      };
+
+      /**
+       * Bank account
+       */
+      struct additional_info
+      {
+         std::string about;
+         std::string companyName;
+         std::string companyActivity;
+         std::string companyVat;
+         std::string companyWebsite;
+         std::string companyYoutube;
+         std::string companyPdf;
+      };
+
 
    /**
     * @brief This class represents an account on the object graph
@@ -154,6 +193,18 @@ namespace graphene { namespace chain {
 
          /// The account's name. This name must be unique among all account names on the graph. May not be empty.
          string name;
+
+         // Karma.
+         uint32_t karma;
+
+         // Personal info.
+         personal_info pi;
+
+         // Bank account.
+         bank_account ba;
+
+         // Additional info.
+         additional_info ai;
 
          /**
           * The owner authority represents absolute control over the account. Usually the keys in this authority will
@@ -369,11 +420,17 @@ namespace graphene { namespace chain {
 
 }}
 
+FC_REFLECT( graphene::chain::personal_info, (login)(email)(firstName)(lastName)(facebook)(mobile)(taxResidence) )
+
+FC_REFLECT( graphene::chain::bank_account, (bankName)(bankSwift)(bankAccount)(bankBenificiary) )
+
+FC_REFLECT( graphene::chain::additional_info, (about)(companyName)(companyActivity)(companyVat)(companyWebsite)(companyYoutube)(companyPdf) )
+
 FC_REFLECT_DERIVED( graphene::chain::account_object,
                     (graphene::db::object),
                     (membership_expiration_date)(registrar)(referrer)(lifetime_referrer)
                     (network_fee_percentage)(lifetime_referrer_fee_percentage)(referrer_rewards_percentage)
-                    (name)(owner)(active)(options)(statistics)(whitelisting_accounts)(blacklisting_accounts)
+                    (name)(karma)(pi)(ba)(ai)(owner)(active)(options)(statistics)(whitelisting_accounts)(blacklisting_accounts)
                     (whitelisted_accounts)(blacklisted_accounts)
                     (cashback_vb)
                     (owner_special_authority)(active_special_authority)

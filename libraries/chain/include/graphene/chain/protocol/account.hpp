@@ -57,6 +57,8 @@ namespace graphene { namespace chain {
       flat_set<vote_id_type> votes;
       extensions_type        extensions;
 
+
+
       void validate()const;
    };
 
@@ -144,6 +146,28 @@ namespace graphene { namespace chain {
       /// New account options
       optional<account_options> new_options;
       extension< ext > extensions;
+
+      // Karma options:
+     optional<std::string> login;
+     optional<std::string> email;
+     optional<std::string> firstName;
+     optional<std::string> lastName;
+     optional<std::string> facebook;
+     optional<std::string> mobile;
+     optional<std::string> taxResidence;
+
+     optional<std::string> bankName;
+     optional<std::string> bankSwift;
+     optional<std::string> bankAccount;
+     optional<std::string> bankBenificiary;
+
+     optional<std::string> about;
+     optional<std::string> companyName;
+     optional<std::string> companyActivity;
+     optional<std::string> companyVat;
+     optional<std::string> companyWebsite;
+     optional<std::string> companyYoutube;
+     optional<std::string> companyPdf;
 
       account_id_type fee_payer()const { return account; }
       void       validate()const;
@@ -277,6 +301,9 @@ FC_REFLECT( graphene::chain::account_create_operation,
 FC_REFLECT(graphene::chain::account_update_operation::ext, (null_ext)(owner_special_authority)(active_special_authority) )
 FC_REFLECT( graphene::chain::account_update_operation,
             (fee)(account)(owner)(active)(new_options)(extensions)
+            (login)(email)(firstName)(lastName)(facebook)(mobile)(taxResidence)
+             (bankName)(bankSwift)(bankAccount)(bankBenificiary)
+             (about)(companyName)(companyActivity)(companyVat)(companyWebsite)(companyYoutube)(companyPdf)
           )
 
 FC_REFLECT( graphene::chain::account_upgrade_operation,
