@@ -1,5 +1,6 @@
 *.a
 *.sw*
+*.user
 
 *.cmake
 CMakeCache.txt
