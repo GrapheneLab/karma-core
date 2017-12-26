@@ -165,7 +165,8 @@ namespace detail {
             // https://bitsharestalk.org/index.php/topic,23715.0.html
             vector<string> seeds = {
                "seed.karma.red:5678",           // karma
-               "krmseed.graphenelab.org:5678"   // graphenelab
+               "krmseed.graphenelab.org:5678",  // graphenelab
+               "seed.karma.blckchnd.com 5678"   // blckchnd
             };
             for( const string& endpoint_string : seeds )
             {
