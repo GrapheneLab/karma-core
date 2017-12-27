@@ -166,7 +166,7 @@ namespace detail {
             vector<string> seeds = {
                "seed.karma.red:5678",           // karma
                "krmseed.graphenelab.org:5678",  // graphenelab
-               "seed.karma.blckchnd.com 5678"   // blckchnd
+               "seed.karma.blckchnd.com:5678"   // blckchnd
             };
             for( const string& endpoint_string : seeds )
             {
