@@ -168,7 +168,9 @@ namespace detail {
                "krmseed.graphenelab.org:5678",  // graphenelab
                "seed.karma-block.org:5678",     // lev-spichka
                "seed.karma.dgazek.tk:5678",     // dga-zek
-               "seed.karma.blckchnd.com:5678"   // blckchnd
+               "seed.karma.blckchnd.com:5678",  // blckchnd
+               "seed.krm-db.com:5678",          // jesta
+               "193.124.190.92:5678"            // pr0r0k
             };
             for( const string& endpoint_string : seeds )
             {
