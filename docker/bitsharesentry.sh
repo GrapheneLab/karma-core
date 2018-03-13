@@ -1,5 +1,5 @@
 #!/bin/bash
-BITSHARESD="/usr/local/bin/witness_node"
+BITSHARESD="/usr/local/bin/karma"
 
 # For blockchain download
 VERSION=`cat /etc/bitshares/version`
