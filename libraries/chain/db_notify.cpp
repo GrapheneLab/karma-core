@@ -50,6 +50,11 @@ struct get_impacted_account_visitor
       _impacted.insert( op.borrower );
    }  
 
+   void operator()( const exchange_rate_set_operation& op ) 
+   {
+      _impacted.insert( op.witness );
+   }  
+
    void operator()( const asset_claim_fees_operation& op ){}
    void operator()( const limit_order_create_operation& op ) {}
    void operator()( const limit_order_cancel_operation& op )
@@ -306,6 +311,10 @@ static void get_relevant_accounts( const object* obj, flat_set<account_id_type>&
            break;
         } case balance_object_type:{
            /** these are free from any accounts */
+           break;
+        } case credit_object_type:{
+           break;
+        } case exchange_rate_object_type:{
            break;
         }
       }

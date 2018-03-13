@@ -34,6 +34,7 @@
 #include <graphene/chain/withdraw_permission_object.hpp>
 #include <graphene/chain/witness_object.hpp>
 #include <graphene/chain/credit_object.hpp>
+#include <graphene/chain/exchange_rate_object.hpp>
 
 #include <graphene/chain/protocol/fee_schedule.hpp>
 
@@ -265,6 +266,16 @@ void database::process_credit_stories( )
         b.process( this );
       });
    }
+}
+
+void database::process_exchange_rates( )
+{
+   const auto& e = get_index_type<exchange_rate_index>( ).indices( ).get<by_id>( );
+      
+   modify( *e.begin(), [this]( exchange_rate_object& b ) 
+      {
+        b.process( this );
+      });   
 }
 
 void database::clear_expired_orders()

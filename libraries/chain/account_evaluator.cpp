@@ -302,44 +302,45 @@ void_result account_update_evaluator::do_apply( const account_update_operation& 
    database& d = db();
    bool sa_before, sa_after;
    d.modify( *acnt, [&](account_object& a){
-       if( o.login )
-                   a.pi.login = *(o.login);
-             if( o.email )
-                   a.pi.email = *(o.email);
-             if( o.firstName )
-                   a.pi.firstName = *(o.firstName);
-             if( o.lastName )
-                   a.pi.lastName = *(o.lastName);
-             if( o.facebook )
-                   a.pi.facebook = *(o.facebook);
-             if( o.mobile )
-                   a.pi.mobile = *(o.mobile);
-             if( o.taxResidence )
-                   a.pi.taxResidence = *(o.taxResidence);
 
-             if( o.bankName )
-                   a.ba.bankName = *(o.bankName);
-             if( o.bankSwift )
-                   a.ba.bankSwift = *(o.bankSwift);
-             if( o.bankAccount )
-                   a.ba.bankAccount = *(o.bankAccount);
-             if( o.bankBenificiary )
-                   a.ba.bankBenificiary = *(o.bankBenificiary);
+      if( o.login )
+            a.pi.login = *(o.login);
+      if( o.email )
+            a.pi.email = *(o.email);
+      if( o.firstName )
+            a.pi.firstName = *(o.firstName);
+      if( o.lastName )
+            a.pi.lastName = *(o.lastName);
+      if( o.facebook )
+            a.pi.facebook = *(o.facebook);
+      if( o.mobile )
+            a.pi.mobile = *(o.mobile);
+      if( o.taxResidence )
+            a.pi.taxResidence = *(o.taxResidence);
 
-             if( o.about )
-                   a.ai.about = *(o.about);
-             if( o.companyName )
-                   a.ai.companyName = *(o.companyName);
-             if( o.companyActivity )
-                   a.ai.companyActivity = *(o.companyActivity);
-             if( o.companyVat )
-                   a.ai.companyVat = *(o.companyVat);
-             if( o.companyWebsite )
-                   a.ai.companyWebsite = *(o.companyWebsite);
-             if( o.companyYoutube )
-                   a.ai.companyYoutube = *(o.companyYoutube);
-             if( o.companyPdf )
-                   a.ai.companyPdf = *(o.companyPdf);
+      if( o.bankName )
+            a.ba.bankName = *(o.bankName);
+      if( o.bankSwift )
+            a.ba.bankSwift = *(o.bankSwift);
+      if( o.bankAccount )
+            a.ba.bankAccount = *(o.bankAccount);
+      if( o.bankBenificiary )
+            a.ba.bankBenificiary = *(o.bankBenificiary);
+
+      if( o.about )
+            a.ai.about = *(o.about);
+      if( o.companyName )
+            a.ai.companyName = *(o.companyName);
+      if( o.companyActivity )
+            a.ai.companyActivity = *(o.companyActivity);
+      if( o.companyVat )
+            a.ai.companyVat = *(o.companyVat);
+      if( o.companyWebsite )
+            a.ai.companyWebsite = *(o.companyWebsite);
+      if( o.companyYoutube )
+            a.ai.companyYoutube = *(o.companyYoutube);
+      if( o.companyPdf )
+            a.ai.companyPdf = *(o.companyPdf);
 
       if( o.owner )
       {

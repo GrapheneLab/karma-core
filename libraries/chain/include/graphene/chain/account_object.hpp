@@ -29,6 +29,45 @@
 namespace graphene { namespace chain {
    class database;
 
+/**
+  * KYC data
+  */
+        struct personal_info
+        {
+           std::string login;
+           std::string email;
+           std::string firstName;
+           std::string lastName;
+           std::string facebook;
+           std::string mobile;
+           std::string taxResidence;
+        };
+        /**
+         * Bank account
+         */
+        struct bank_account
+        {
+           std::string bankName;
+           std::string bankSwift;
+           std::string bankAccount;
+           std::string bankBenificiary;
+        };
+  
+        /**
+         * Bank account
+         */
+        struct additional_info
+        {
+           std::string about;
+           std::string companyName;
+           std::string companyActivity;
+           std::string companyVat;
+           std::string companyWebsite;
+           std::string companyYoutube;
+           std::string companyPdf;
+        };
+
+
    /**
     * @class account_statistics_object
     * @ingroup object
@@ -113,46 +152,6 @@ namespace graphene { namespace chain {
    };
 
    /**
-       * KYC data
-       */
-      struct personal_info
-      {
-         std::string login;
-         std::string email;
-         std::string firstName;
-         std::string lastName;
-         std::string facebook;
-         std::string mobile;
-         std::string taxResidence;
-      };
-
-      /**
-       * Bank account
-       */
-      struct bank_account
-      {
-         std::string bankName;
-         std::string bankSwift;
-         std::string bankAccount;
-         std::string bankBenificiary;
-      };
-
-      /**
-       * Bank account
-       */
-      struct additional_info
-      {
-         std::string about;
-         std::string companyName;
-         std::string companyActivity;
-         std::string companyVat;
-         std::string companyWebsite;
-         std::string companyYoutube;
-         std::string companyPdf;
-      };
-
-
-   /**
     * @brief This class represents an account on the object graph
     * @ingroup object
     * @ingroup protocol
@@ -198,13 +197,11 @@ namespace graphene { namespace chain {
          uint32_t karma;
 
          // Personal info.
-         personal_info pi;
-
-         // Bank account.
-         bank_account ba;
-
-         // Additional info.
-         additional_info ai;
+          personal_info pi;
+          // Bank account.
+          bank_account ba;
+          // Additional info.
+          additional_info ai;
 
          /**
           * The owner authority represents absolute control over the account. Usually the keys in this authority will

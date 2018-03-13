@@ -777,6 +777,29 @@ class wallet_api
                                                 string deposit_asset_symbol,
                                                 bool broadcast = false );
 
+      /** Approve credit request**/
+      signed_transaction approve_credit_request( string creditor, 
+                                                    string request_uuid, 
+                                                    string credit_memo,
+                                                    bool broadcast = false );   
+
+      /** Comment credit request**/
+      signed_transaction comment_credit_request( string creditor, 
+                                                    string request_uuid, 
+                                                    string credit_memo,
+                                                    bool broadcast = false );                                                                                                    
+
+      /** Forced complete**/
+      signed_transaction forced_complete_credit_request( string borrower, 
+                                                       string credit_requet_uuid, 
+                                                       bool broadcast = false );                                                       
+
+      /** Cancel credit request**/
+      signed_transaction cancel_credit_request( string borrower, 
+                                                    string request_uuid, 
+                                                    string credit_memo,
+                                                    bool broadcast = false ); 
+
       vector<credit_object> list_credit_requests_stack(uint32_t limit)const;
 
       vector<credit_object> list_credit_request_by_uuid( string uuid )const;
@@ -794,6 +817,13 @@ class wallet_api
                                                                       uint32_t status
                                                                     ) const;
 
+      signed_transaction exchange_rate_set( string witness, 
+                                            std::map<std::string, double> exch_rates,   
+                                            bool broadcast = false );
+
+      map<string, string> list_last_exchange_rates()const;
+      map< std::string, std::map< account_id_type, string >> list_current_exchange_rates()const;
+      graphene::chain::chain_parameters::ext::credit_options list_global_extensions()const;
       /**
        *  This method works just like transfer, except it always broadcasts and
        *  returns the transaction ID along with the signed transaction.
@@ -1685,6 +1715,9 @@ FC_API( graphene::wallet::wallet_api,
         (list_credit_requests_stack)
         (list_credit_request_by_uuid)
         (fetch_credit_requests_stack)
+        (list_last_exchange_rates)
+        (list_current_exchange_rates)
+        (list_global_extensions)
         (import_key)
         (import_accounts)
         (import_account_keys)
@@ -1701,6 +1734,11 @@ FC_API( graphene::wallet::wallet_api,
         (cancel_order)
         (transfer)
         (create_credit_request)
+        (approve_credit_request)
+        (comment_credit_request)
+        (forced_complete_credit_request)
+        (cancel_credit_request)
+        (exchange_rate_set)
         (transfer2)
         (get_transaction_id)
         (create_asset)
