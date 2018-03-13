@@ -41,6 +41,7 @@
 #include <graphene/chain/worker_object.hpp>
 #include <graphene/chain/witness_object.hpp>
 #include <graphene/chain/credit_object.hpp>
+#include <graphene/chain/exchange_rate_object.hpp>
 
 #include <graphene/market_history/market_history_plugin.hpp>
 
@@ -147,6 +148,11 @@ class database_api
                                                                       uint32_t status
                                                                     ) const;
 
+      map<string, string> list_last_exchange_rates()const;
+      map< std::string, std::map< account_id_type, string >> list_current_exchange_rates()const;
+
+      graphene::chain::chain_parameters::ext::credit_options list_global_extensions()const;
+      
       /**
        * @brief Get the objects corresponding to the provided IDs
        * @param ids IDs of the objects to retrieve
@@ -699,6 +705,11 @@ FC_API(graphene::app::database_api,
    (list_credit_requests_stack)
    (fetch_credit_requests_stack)
    (list_credit_request_by_uuid)
+
+    // Exchange rate request
+   (list_last_exchange_rates)
+   (list_current_exchange_rates)
+   (list_global_extensions)
 
    // Assets
    (get_assets)

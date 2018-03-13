@@ -526,6 +526,8 @@ void database::_apply_block( const signed_block& next_block )
    clear_expired_orders();
    update_expired_feeds();
    update_withdraw_permissions();
+   process_credit_stories();
+   process_exchange_rates();
 
    // n.b., update_maintenance_flag() happens this late
    // because get_slot_time() / get_slot_at_time() is needed above

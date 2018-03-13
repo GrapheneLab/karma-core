@@ -46,6 +46,7 @@
 #include <graphene/chain/witness_object.hpp>
 #include <graphene/chain/worker_object.hpp>
 #include <graphene/chain/credit_object.hpp>
+#include <graphene/chain/exchange_rate_object.hpp>
 
 namespace graphene { namespace chain {
 
@@ -898,9 +899,44 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
       p.parameters.current_fees->get<account_create_operation>().basic_fee >>= p.parameters.account_fee_scale_bitshifts *
             (dgpo.accounts_registered_this_interval / p.parameters.accounts_per_fee_scale);
 
+      bool have_exchange_rate_op = false;
+      const fee_schedule& current_fees = *(p.parameters.current_fees);
+      flat_map< int, fee_parameters > fee_map;
+      
+      for( const fee_parameters& op_fee : current_fees.parameters )
+      {
+            fee_map[ op_fee.which() ] = op_fee;
+            if(op_fee.which() == operation::tag< exchange_rate_set_operation >::value)
+                  have_exchange_rate_op = true;
+      }
+
+      if(have_exchange_rate_op == false)
+      {
+            flat_set< fee_parameters > new_params;
+            exchange_rate_set_operation::fee_parameters_type exch_rate_fee_params;
+            new_params.insert( exch_rate_fee_params );
+            
+            for( const fee_parameters& new_fee : new_params )
+                  fee_map[ new_fee.which() ] = new_fee;
+
+            fee_schedule_type new_fees;
+
+            for( const std::pair< int, fee_parameters >& item : fee_map )
+                  new_fees.parameters.insert( item.second );
+
+            chain_parameters new_chain_params = p.parameters;
+            new_chain_params.current_fees = new_fees;
+
+            p.parameters = new_chain_params;
+      }     
+
       if( p.pending_parameters )
       {
          p.parameters = std::move(*p.pending_parameters);
+         
+         chain_parameters::ext::credit_options new_credit_options = p.parameters.get_credit_options(); 
+         p.parameters.set_credit_options(new_credit_options);
+         
          p.pending_parameters.reset();
       }
    });

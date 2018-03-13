@@ -79,6 +79,11 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
                                                                       uint32_t status
                                                                     ) const;
 
+      // Exchange rates request
+      map<string, string>           list_last_exchange_rates()const;
+      map< std::string, std::map< account_id_type, string >> list_current_exchange_rates()const;
+      graphene::chain::chain_parameters::ext::credit_options list_global_extensions()const;
+      
       // Subscriptions
       void set_subscribe_callback( std::function<void(const variant&)> cb, bool notify_remove_create );
       void set_pending_transaction_callback( std::function<void(const variant&)> cb );
@@ -997,6 +1002,21 @@ vector<credit_object> database_api::fetch_credit_requests_stack( uint32_t from_i
                                              cyrrency_symbol, user_id, status );    
 }                                                                  
 
+map<string, string> database_api::list_last_exchange_rates()const
+{
+    return my->list_last_exchange_rates();
+}
+
+map< std::string, std::map< account_id_type, string >> database_api::list_current_exchange_rates()const
+{
+    return my->list_current_exchange_rates();
+}
+
+graphene::chain::chain_parameters::ext::credit_options database_api::list_global_extensions()const
+{
+    return my->list_global_extensions();
+}
+
 vector<credit_object> database_api_impl::list_credit_requests_stack( uint32_t limit )const
 {
    FC_ASSERT( limit <= 100 );
@@ -1103,6 +1123,44 @@ vector<credit_object> database_api_impl::fetch_credit_requests_stack( uint32_t f
    }
    return result;    
 }                                        
+
+map<string, string> database_api_impl::list_last_exchange_rates()const
+{
+    const auto& exch_object = _db.get_index_type<exchange_rate_index>().indices().get<by_id>();
+
+    map<string, string> result;
+
+    for (auto const& x : (*exch_object.begin()).last_exchange_rate)
+    {
+        result[x.first] = std::to_string(x.second);
+    }
+
+   return result;    
+}
+
+map< std::string, std::map< account_id_type, string >> database_api_impl::list_current_exchange_rates()const
+{
+    const auto& exch_object = _db.get_index_type<exchange_rate_index>().indices().get<by_id>();
+
+    map< std::string, std::map< account_id_type, string >> result;
+
+    // by currency
+    for (auto const& current_exch_it : (*exch_object.begin()).current_exchange_rate)
+    {
+        // by accounts
+        for(auto const& account_id_it : current_exch_it.second)
+        {
+            result[current_exch_it.first][account_id_it.first] = std::to_string(account_id_it.second);
+        }
+    }
+
+    return result;
+}
+
+graphene::chain::chain_parameters::ext::credit_options database_api_impl::list_global_extensions()const
+{
+    return get_global_properties().parameters.get_credit_options();
+}
 
 vector<asset_object> database_api_impl::list_assets(const string& lower_bound_symbol, uint32_t limit)const
 {
@@ -1316,7 +1374,7 @@ market_ticker database_api_impl::get_ticker( const string& base, const string& q
     FC_ASSERT( assets[1], "Invalid quote asset symbol: ${s}", ("s",quote) );
 
     const fc::time_point_sec now = fc::time_point::now();
-    const fc::time_point_sec yesterday = fc::time_point_sec( now.sec_since_epoch() - 86400 );
+    //const fc::time_point_sec yesterday = fc::time_point_sec( now.sec_since_epoch() - 86400 );
 
     market_ticker result;
     result.time = now;

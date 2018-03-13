@@ -1573,7 +1573,6 @@ public:
       )
    {
       account_object acct = get_account( account );
-      account_update_operation op;
 
       // you could probably use a faster algorithm for this, but flat_set is fast enough :)
       flat_set< worker_id_type > merged;
@@ -2067,6 +2066,121 @@ public:
       return sign_transaction(tx, broadcast);
    } FC_CAPTURE_AND_RETHROW( (borrower)(loan_amount)(loan_asset_symbol)(loan_persent)(loan_period_in_month)(loan_memo)(deposit_amount)(deposit_asset_symbol)(broadcast) ) }
 
+   signed_transaction approve_credit_request( string creditor, 
+                                                string request_uuid, 
+                                                string credit_memo,
+                                                bool broadcast = false )
+   { try {
+      FC_ASSERT( !self.is_locked() );
+
+      account_object from_account = get_account(creditor);
+      account_id_type from_id = from_account.id;
+
+      credit_approve_operation credit_op;
+      credit_op.creditor = from_id;
+      credit_op.credit_request_uuid = request_uuid;
+      credit_op.credit_memo = credit_memo;
+
+      signed_transaction tx;
+      tx.operations.push_back(credit_op);
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
+      tx.validate();
+
+      return sign_transaction(tx, broadcast);
+   } FC_CAPTURE_AND_RETHROW( (creditor)(request_uuid)(credit_memo)(broadcast) ) }   
+
+   signed_transaction comment_credit_request( string creditor, 
+                                                    string request_uuid, 
+                                                    string credit_memo,
+                                                    bool broadcast = false )
+   { try {
+      FC_ASSERT( !self.is_locked() );
+
+      account_object from_account = get_account(creditor);
+      account_id_type from_id = from_account.id;
+
+      comment_credit_request_operation credit_op;
+      credit_op.creditor = from_id;
+      credit_op.credit_request_uuid = request_uuid;
+      credit_op.credit_memo = credit_memo;
+
+      signed_transaction tx;
+      tx.operations.push_back(credit_op);
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
+      tx.validate();
+
+      return sign_transaction(tx, broadcast);
+   } FC_CAPTURE_AND_RETHROW( (creditor)(request_uuid)(credit_memo)(broadcast) ) }     
+
+  signed_transaction forced_complete_credit_request( string borrower, 
+                                                       string credit_requet_uuid, 
+                                                       bool broadcast )
+   { try {
+      FC_ASSERT( !self.is_locked() );
+
+      account_object from_account = get_account(borrower);
+      account_id_type from_id = from_account.id;
+
+      settle_credit_operation credit_op;
+      credit_op.borrower = from_id;
+      credit_op.credit_request_uuid = credit_requet_uuid;
+
+      signed_transaction tx;
+      tx.operations.push_back(credit_op);
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
+      tx.validate();
+
+      return sign_transaction(tx, broadcast);
+   } FC_CAPTURE_AND_RETHROW( (borrower)(credit_requet_uuid)(broadcast) ) }  
+
+   signed_transaction cancel_credit_request( string borrower, 
+                                                    string request_uuid, 
+                                                    string credit_memo,
+                                                    bool broadcast = false )
+   { try {
+      FC_ASSERT( !self.is_locked() );
+
+      account_object from_account = get_account(borrower);
+      account_id_type from_id = from_account.id;
+
+      credit_request_cancel_operation credit_op;
+      credit_op.borrower = from_id;
+      credit_op.credit_request_uuid = request_uuid;
+      credit_op.borrow_memo = credit_memo;
+
+      signed_transaction tx;
+      tx.operations.push_back(credit_op);
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
+      tx.validate();
+
+      return sign_transaction(tx, broadcast);
+   } FC_CAPTURE_AND_RETHROW( (borrower)(request_uuid)(credit_memo)(broadcast) ) } 
+
+/*********************** Exchange rate set operation *************************************************************/
+   signed_transaction exchange_rate_set(  string witness, 
+                                          std::map<std::string, double> exch_rates,   
+                                          bool broadcast = false )
+   { try {
+      FC_ASSERT( !self.is_locked() );
+
+      for(auto it = exch_rates.begin(); it != exch_rates.end(); it++)
+            fc::optional<asset_object> asset_obj = get_asset(it->first);
+      
+      exchange_rate_set_operation exch_rate_set_op;
+      
+      exch_rate_set_op.witness=get_account(witness).id;
+
+      for(auto it = exch_rates.begin(); it != exch_rates.end(); it++)
+            exch_rate_set_op.exchange_rate[it->first]=it->second;
+
+      signed_transaction tx;
+      tx.operations.push_back(exch_rate_set_op);
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
+      tx.validate();
+
+      return sign_transaction(tx, broadcast);
+   } FC_CAPTURE_AND_RETHROW( (witness)(exch_rates)(broadcast) ) }  
+
    signed_transaction issue_asset(string to_account, string amount, string symbol,
                                   string memo, bool broadcast = false)
    {
@@ -2099,6 +2213,7 @@ public:
 
    std::map<string,std::function<string(fc::variant,const fc::variants&)>> get_result_formatters() const
    {
+         
       std::map<string,std::function<string(fc::variant,const fc::variants&)> > m;
       m["help"] = [](variant result, const fc::variants& a)
       {
@@ -2318,15 +2433,23 @@ public:
       bool broadcast = false)
    {
       FC_ASSERT( !changed_values.contains("current_fees") );
-
+      
       const chain_parameters& current_params = get_global_properties().parameters;
       chain_parameters new_params = current_params;
+      chain_parameters::ext::credit_options new_credit_options = new_params.get_credit_options();
+
+      // check extensions
+      fc::reflector<chain_parameters::ext::credit_options>::visit(
+            fc::from_variant_visitor<chain_parameters::ext::credit_options>( changed_values, new_credit_options )
+            );
+
       fc::reflector<chain_parameters>::visit(
          fc::from_variant_visitor<chain_parameters>( changed_values, new_params )
          );
 
       committee_member_update_global_parameters_operation update_op;
       update_op.new_parameters = new_params;
+      update_op.new_parameters.set_credit_options(new_credit_options);
 
       proposal_create_operation prop_op;
 
@@ -2762,7 +2885,7 @@ std::string operation_result_printer::operator()(const void_result& x) const
 }
 
 std::string operation_result_printer::operator()(const object_id_type& oid)
-{
+{      
    return std::string(oid);
 }
 
@@ -2848,6 +2971,22 @@ vector<credit_object> wallet_api::fetch_credit_requests_stack( uint32_t from_ind
 {
       return my->_remote_db->fetch_credit_requests_stack( from_index, elements_count, loan_persent_from, loan_persent_to, deposit_persent_from, deposit_persent_to,
                                                           loan_volume_from, loan_volume_to, cyrrency_symbol, user_id, status );
+}
+
+
+map<string, string> wallet_api::list_last_exchange_rates() const
+{
+      return my->_remote_db->list_last_exchange_rates();
+}
+
+map< std::string, std::map< account_id_type, string >> wallet_api::list_current_exchange_rates()const
+{
+      return my->_remote_db->list_current_exchange_rates();
+}
+
+graphene::chain::chain_parameters::ext::credit_options wallet_api::list_global_extensions()const
+{
+      return my->_remote_db->list_global_extensions();
 }
 
 vector<account_object> wallet_api::list_my_accounts()
@@ -3302,6 +3441,40 @@ signed_transaction wallet_api::create_credit_request( string borrower,
                                      deposit_amount, 
                                      deposit_asset_symbol,
                                      broadcast );
+}
+
+signed_transaction wallet_api::approve_credit_request( string creditor, string credit_request_uuid, string credit_memo, bool broadcast  )
+{
+   return my->approve_credit_request(creditor, credit_request_uuid, credit_memo, broadcast );
+}
+
+signed_transaction wallet_api::comment_credit_request( string creditor, 
+                                                       string credit_requet_uuid, 
+                                                       string loan_memo, 
+                                                       bool broadcast )
+{
+   return my->comment_credit_request(creditor, credit_requet_uuid, loan_memo, broadcast);
+}
+
+signed_transaction wallet_api::forced_complete_credit_request( string borrower, 
+                                                       string credit_request_uuid, 
+                                                       bool broadcast )
+{
+   return my->forced_complete_credit_request(borrower, credit_request_uuid, broadcast );
+}
+
+signed_transaction wallet_api::cancel_credit_request( string borrower, string credit_request_uuid, string credit_memo, bool broadcast  )
+{
+   return my->cancel_credit_request(borrower, credit_request_uuid, credit_memo, broadcast );
+}
+
+signed_transaction wallet_api::exchange_rate_set( string witness, 
+                                            std::map<std::string, double> exch_rates,   
+                                            bool broadcast )
+{
+      return my->exchange_rate_set(   witness,
+                                                exch_rates,
+                                                broadcast);
 }
 
 signed_transaction wallet_api::create_asset(string issuer,

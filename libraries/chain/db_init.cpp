@@ -47,6 +47,7 @@
 #include <graphene/chain/witness_schedule_object.hpp>
 #include <graphene/chain/worker_object.hpp>
 #include <graphene/chain/credit_object.hpp>
+#include <graphene/chain/exchange_rate_object.hpp>
 
 #include <graphene/chain/account_evaluator.hpp>
 #include <graphene/chain/asset_evaluator.hpp>
@@ -63,6 +64,7 @@
 #include <graphene/chain/witness_evaluator.hpp>
 #include <graphene/chain/worker_evaluator.hpp>
 #include <graphene/chain/credit_evaluator.hpp>
+#include <graphene/chain/exchange_rate_evaluator.hpp>
 
 #include <graphene/chain/protocol/fee_schedule.hpp>
 
@@ -88,6 +90,9 @@ const uint8_t account_object::type_id;
 
 const uint8_t credit_object::space_id;
 const uint8_t credit_object::type_id;
+
+const uint8_t exchange_rate_object::space_id;
+const uint8_t exchange_rate_object::type_id;
 
 const uint8_t asset_object::space_id;
 const uint8_t asset_object::type_id;
@@ -182,6 +187,7 @@ void database::initialize_evaluators()
    register_evaluator<credit_request_evaluator>();
    register_evaluator<credit_approve_evaluator>();
    register_evaluator<credit_request_cancel_evaluator>();
+   register_evaluator<exchange_rate_set_evaluator>();
 }
 
 void database::initialize_indexes()
@@ -193,6 +199,7 @@ void database::initialize_indexes()
    add_index< primary_index<asset_index> >();
    add_index< primary_index<force_settlement_index> >();
    add_index< primary_index<credit_index> >();
+   add_index< primary_index<exchange_rate_index> >();
 
    auto acnt_index = add_index< primary_index<account_index> >();   
    acnt_index->add_secondary_index<account_member_index>();
@@ -389,6 +396,11 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       remove( asset_obj );
    }
 
+   // create exchange_rate object
+   create<exchange_rate_object>([](exchange_rate_object& p) {
+       p.last_exchange_rate[GRAPHENE_SYMBOL] = 1.0;      
+   });
+
    chain_id_type chain_id = genesis_state.compute_chain_id();
 
    // Create global properties
@@ -397,6 +409,9 @@ void database::init_genesis(const genesis_state_type& genesis_state)
        // Set fees to zero initially, so that genesis initialization needs not pay them
        // We'll fix it at the end of the function
        p.parameters.current_fees->zero_all_fees();
+       // set extensions if not set yet
+       chain_parameters::ext::credit_options new_credit_options = p.parameters.get_credit_options(); 
+       p.parameters.set_credit_options(new_credit_options);
 
    });
    create<dynamic_global_property_object>([&](dynamic_global_property_object& p) {

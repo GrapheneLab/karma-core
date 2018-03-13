@@ -192,6 +192,24 @@ namespace graphene { namespace chain {
                  "Maximum transaction expiration time must be greater than a block interval" );
       FC_ASSERT( maximum_proposal_lifetime - committee_proposal_review_period > block_interval,
                  "Committee proposal review period must be less than the maximum proposal lifetime" );
+      
+      if( extensions.size() > 0 )
+      {
+      ext::credit_options new_credit_options = get_credit_options(); 
+
+      FC_ASSERT( new_credit_options.seconds_per_day > 0,
+                 "Seconds_per_day interval must be greater than zero" );
+      FC_ASSERT( new_credit_options.max_credit_expiration_days >= 0,
+                 "Max credit expiration days interval must be greater or equal than zero" );                 
+      FC_ASSERT( new_credit_options.min_witnesses_for_exchange_rate > 0,
+                  "Min witnesses for set exchange rate must be greater than zero" );                 
+      FC_ASSERT( new_credit_options.exchange_rate_set_min_interval > 0,
+                  "Exchange rate set min interval must be greater than zero" );                 
+      FC_ASSERT( new_credit_options.exchange_rate_set_max_interval > 0,
+                  "Exchange rate set max interval must be greater than zero" );
+      FC_ASSERT( new_credit_options.exchange_rate_set_min_interval <= new_credit_options.exchange_rate_set_max_interval,
+                  "Exchange rate min interval must be less or equal than exchange rate max interval" );                  
+      }            
    }
 
 } } // graphene::chain
