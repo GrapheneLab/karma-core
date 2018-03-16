@@ -1,4 +1,6 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -e
+
 BITSHARESD="/usr/local/bin/karma"
 
 # For blockchain download
@@ -78,8 +80,5 @@ if [[ ! -z "$BITSHARESD_TRUSTED_NODE" ]]; then
     ARGS+=" --trusted-node=${BITSHARESD_TRUSTED_NODE}"
 fi
 
-## Link the bitshares config file into home
-## This link has been created in Dockerfile, already
-ln -f -s /etc/bitshares/config.ini /var/lib/bitshares
+exec $BITSHARESD --data-dir ${HOME} ${ARGS} ${BITSHARESD_ARGS}
 
-$BITSHARESD --data-dir ${HOME} ${ARGS} ${BITSHARESD_ARGS}
