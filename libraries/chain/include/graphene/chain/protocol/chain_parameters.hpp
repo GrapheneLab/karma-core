@@ -25,20 +25,27 @@
 #include <graphene/chain/protocol/base.hpp>
 #include <graphene/chain/protocol/types.hpp>
 #include <fc/smart_ref_fwd.hpp>
+#include <iostream>
 
 namespace graphene { namespace chain { struct fee_schedule; } }
-/*
-namespace fc {
-   template<typename Stream, typename T> inline void pack( Stream& s, const graphene::chain::fee_schedule& value );
-   template<typename Stream, typename T> inline void unpack( Stream& s, graphene::chain::fee_schedule& value );
-} // namespace fc
-*/
 
 namespace graphene { namespace chain {
 
-   typedef static_variant<>  parameter_extension; 
    struct chain_parameters
    {
+     struct ext
+      {
+         /** container to credit parameters */
+         struct credit_options
+         {
+            uint32_t seconds_per_day = 86400; ///< interval in second for one day for credits
+            uint32_t max_credit_expiration_days = 7; ///< max expiration time in days for credits
+            uint32_t min_witnesses_for_exchange_rate = 7; ///< minimum number of active witnesses who should vote to set new exchange rate
+            uint32_t exchange_rate_set_max_interval = 3600; ///< max interval in seconds waiting for witnesses set rates
+            uint32_t exchange_rate_set_min_interval = 75; ///< interval in seconds after which looking for min witnesses set rates
+         };
+      };
+
       /** using a smart ref breaks the circular dependency created between operations and the fee schedule */
       smart_ref<fee_schedule> current_fees;                       ///< current schedule of fees
       uint8_t                 block_interval                      = GRAPHENE_DEFAULT_BLOCK_INTERVAL; ///< interval in seconds between blocks
@@ -69,13 +76,47 @@ namespace graphene { namespace chain {
       uint16_t                accounts_per_fee_scale              = GRAPHENE_DEFAULT_ACCOUNTS_PER_FEE_SCALE; ///< number of accounts between fee scalings
       uint8_t                 account_fee_scale_bitshifts         = GRAPHENE_DEFAULT_ACCOUNT_FEE_SCALE_BITSHIFTS; ///< number of times to left bitshift account registration fee at each scaling
       uint8_t                 max_authority_depth                 = GRAPHENE_MAX_SIG_CHECK_DEPTH;
+      
+      typedef static_variant<ext::credit_options>  parameter_extension;
+      typedef flat_set<parameter_extension> extensions_type;
       extensions_type         extensions;
 
       /** defined in fee_schedule.cpp */
       void validate()const;
+
+      const ext::credit_options get_credit_options()const
+      {
+        if( extensions.size() > 0 )
+        {
+          for( const parameter_extension& e : extensions )
+          {
+                  if( e.which() == parameter_extension::tag<ext::credit_options>::value )
+                  return e.get<ext::credit_options>();
+          }
+        }
+        return ext::credit_options();
+      }
+
+      void set_credit_options(ext::credit_options& new_co)
+      {
+        extensions.clear();
+        extensions.insert(new_co);
+      }
    };
 
 } }  // graphene::chain
+
+FC_REFLECT( graphene::chain::chain_parameters::ext::credit_options,
+            (seconds_per_day)
+            (max_credit_expiration_days)
+            (min_witnesses_for_exchange_rate)
+            (exchange_rate_set_max_interval)
+            (exchange_rate_set_min_interval)
+          )
+
+FC_REFLECT_TYPENAME( graphene::chain::chain_parameters::parameter_extension )
+FC_REFLECT_TYPENAME( graphene::chain::chain_parameters::extensions_type )
+
 
 FC_REFLECT( graphene::chain::chain_parameters,
             (current_fees)

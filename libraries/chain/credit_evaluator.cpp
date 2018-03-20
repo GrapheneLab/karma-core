@@ -24,9 +24,14 @@
 #include <graphene/chain/credit_evaluator.hpp>
 #include <graphene/chain/account_object.hpp>
 #include <graphene/chain/credit_object.hpp>
+#include <graphene/chain/exchange_rate_object.hpp>
 #include <graphene/chain/exceptions.hpp>
 #include <graphene/chain/hardfork.hpp>
 #include <graphene/chain/is_authorized_asset.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
+#include <boost/algorithm/string.hpp>
+#include <graphene/chain/exchange_rate_object.hpp>
 
 #include <iostream>
 #include <string>
@@ -41,12 +46,14 @@ void_result credit_request_evaluator::do_evaluate( const credit_request_operatio
       
    try {
 
-      const database& d = db( );
+      database& d = db( );
       const account_object& borrower_account = op.borrower( d );
       const asset_object& deposit_asset_type = op.deposit_asset.asset_id( d );  
 
       const asset_object& deposit = op.deposit_asset.asset_id( d );      
       const asset_object& loan = op.loan_asset.asset_id( d );
+
+      double deposit_in_core = 0;
 
       if( deposit.amount_to_real( op.deposit_asset.amount ) < 0.0 )
             FC_ASSERT( 0, "deposit can't be < 0" ); 
@@ -54,8 +61,14 @@ void_result credit_request_evaluator::do_evaluate( const credit_request_operatio
       if( loan.amount_to_real( op.loan_asset.amount ) < 0.0 )
             FC_ASSERT( 0, "loan can't be < 0" );             
 
-      double deposit_in_core = deposit.amount_to_real( op.deposit_asset.amount ) * deposit.options.core_exchange_rate.to_real( );
-      double loan_in_core = loan.amount_to_real( op.loan_asset.amount ) * loan.options.core_exchange_rate.to_real( );  
+      if( deposit.amount_to_real( op.deposit_asset.amount ) != 0.0 )
+      {
+            double deposit_exchange_rate = get_exchange_rate_by_symbol(&d, deposit.symbol);
+            deposit_in_core = deposit.amount_to_real( op.deposit_asset.amount ) * deposit_exchange_rate;
+      }
+
+      double loan_exchange_rate = get_exchange_rate_by_symbol(&d, loan.symbol);
+      double loan_in_core = loan.amount_to_real( op.loan_asset.amount ) * loan_exchange_rate;  
 
       if( op.loan_period == 0 )
             FC_ASSERT( 0, "Loan period can't be 0" ); 
@@ -64,7 +77,7 @@ void_result credit_request_evaluator::do_evaluate( const credit_request_operatio
             FC_ASSERT( 0, "Loan persent can't be 0" ); 
 
       if( deposit.amount_to_real( op.deposit_asset.amount ) != 0.0 )
-      {
+      {            
             if( deposit_in_core < ( ( loan_in_core / 100 ) * DEPOSIT_PERSENT ) )
                   FC_ASSERT( 0, "Deposit less % of credit" );    
             try {
@@ -75,7 +88,8 @@ void_result credit_request_evaluator::do_evaluate( const credit_request_operatio
 
                   return void_result( );
             } FC_RETHROW_EXCEPTIONS( error, "Unable to deposit ${a}", ( "a",d.to_pretty_string( op.loan_asset ) ) );
-      }      
+      }
+      return void_result();      
 }  FC_CAPTURE_AND_RETHROW( ( op ) ) }
 
 object_id_type credit_request_evaluator::do_apply( const credit_request_operation& o )
@@ -102,12 +116,39 @@ object_id_type credit_request_evaluator::do_apply( const credit_request_operatio
 
          obj.request_creation_time = db( ).head_block_time( );
          obj.status = e_credit_object_status::wating_for_acceptance;
-         obj.object_uuid = to_string( boost::uuids::random_generator( )( ) );
+                  
+         std::string time_str = boost::posix_time::to_iso_string(boost::posix_time::from_time_t( obj.request_creation_time.sec_since_epoch( ) ));
+         std::string id = fc::to_string(obj.id.space()) + "." + fc::to_string(obj.id.type()) + "." + fc::to_string(obj.id.instance());
 
+         boost::uuids::string_generator gen;
+         boost::uuids::uuid u1 = gen( id + time_str + time_str );
+         obj.object_uuid = to_string(u1);
+         
          const account_object& borrower_account = o.borrower( db( ) );
          std::stringstream ss;
-         ss << db( ).head_block_time( ).to_iso_string( ) << " : " << "was created with id = " << obj.object_uuid << " by - " << borrower_account.name;
+         std::string time_json = db( ).head_block_time( ).to_iso_string( );
+         ss << time_json << " : " << "was created with id = " << obj.object_uuid << " by - " << borrower_account.name;
          obj.history.push_back( ss.str( ) );
+
+         boost::property_tree::ptree root, details;
+         std::stringstream ss_json;
+         
+         if(obj.history_json.size())
+         {
+            ss_json << obj.history_json;
+            boost::property_tree::read_json(ss_json, root);
+            ss_json.str( std::string() );
+            ss_json.clear();
+         }   
+         details.put("type","request_creation");
+         details.put("id",obj.object_uuid);
+         details.put("borrower",borrower_account.name);
+         root.add_child(time_json, details);
+         
+         boost::property_tree::write_json(ss_json, root);
+         obj.history_json = ss_json.str();
+         obj.history_json.erase(std::remove(obj.history_json.begin(), obj.history_json.end(), '\n'), obj.history_json.end());
+         obj.history_json.erase(std::remove(obj.history_json.begin(), obj.history_json.end(), ' '), obj.history_json.end());
       });
       // deposit money         
       db( ).adjust_balance( o.borrower, -o.deposit_asset );
@@ -157,9 +198,37 @@ object_id_type credit_approve_evaluator::do_apply( const credit_approve_operatio
 
                   const account_object& creditor_account = o.creditor( db( ) );
                   std::stringstream ss;
-                  ss << db( ).head_block_time( ).to_iso_string( ) << " : " << "credit with id = " << b.object_uuid << " was accepted by - " << creditor_account.name << " loan_amount = " << b.borrower.loan_asset.amount.value / 100000 <<
-                  " loan_period_in_month = " << b.borrower.loan_period << " monthly_payment = " << b.creditor.monthly_payment ;
+                  std::string time_json = db( ).head_block_time( ).to_iso_string( );
+                  std::string monthly_payment = std::to_string(b.creditor.monthly_payment);
+
+                  ss << time_json << " : " << "credit with id = " << b.object_uuid << " was accepted by - " << creditor_account.name << 
+                  " loan_amount = " << loan_asset_type.amount_to_string(b.borrower.loan_asset.amount) <<
+                  " loan_period_in_month = " << b.borrower.loan_period << " monthly_payment = " << monthly_payment ;
                   b.history.push_back( ss.str( ) );
+
+                  boost::property_tree::ptree root, details;
+                  std::stringstream ss_json;
+
+                  if(b.history_json.size())
+                  {
+                        ss_json << b.history_json;
+                        boost::property_tree::read_json(ss_json, root);      
+                        ss_json.str( std::string() );
+                        ss_json.clear();
+                  }
+
+                  details.put("type","request_approved");
+                  details.put("id",b.object_uuid);
+                  details.put("creditor",creditor_account.name);
+                  details.put("loan_amount",loan_asset_type.amount_to_string(b.borrower.loan_asset.amount));
+                  details.put("loan_period_in_month",b.borrower.loan_period);
+                  details.put("monthly_payment",monthly_payment);
+                  root.add_child(time_json, details);
+                  
+                  boost::property_tree::write_json(ss_json, root);
+                  b.history_json = ss_json.str();
+                  b.history_json.erase(std::remove(b.history_json.begin(), b.history_json.end(), '\n'), b.history_json.end());
+                  b.history_json.erase(std::remove(b.history_json.begin(), b.history_json.end(), ' '), b.history_json.end());
 
                   ret = b.id;            
             });
@@ -171,7 +240,7 @@ object_id_type credit_approve_evaluator::do_apply( const credit_approve_operatio
             break;
       }
    }
-   FC_ASSERT( credit_request_founded, "credit request not founed!" );
+   FC_ASSERT( credit_request_founded, "credit request not found!" );
    return ret;
 } FC_CAPTURE_AND_RETHROW( ( o ) ) }
 
@@ -195,6 +264,9 @@ object_id_type credit_request_cancel_evaluator::do_apply( const credit_request_c
    {       
       if( ( *itr ).object_uuid.compare( o.credit_request_uuid ) == 0 )
       {
+            if(o.borrower != ( *itr ).borrower.borrower)
+                  FC_ASSERT( 0, "Only owner can cancel the credit request!" );
+            
             if( ( *itr ).status != e_credit_object_status::wating_for_acceptance )
                   FC_ASSERT( 0, "credit request allready accepted!" );
 
@@ -204,7 +276,7 @@ object_id_type credit_request_cancel_evaluator::do_apply( const credit_request_c
             break;
       }
    }
-   FC_ASSERT( credit_request_founded, "credit request not founed!" );
+   FC_ASSERT( credit_request_founded, "credit request not found!" );
    return ret;
 } FC_CAPTURE_AND_RETHROW( ( o ) ) }
 
@@ -239,7 +311,7 @@ object_id_type comment_credit_request_evaluator::do_apply( const comment_credit_
             break;
       }
    }
-   FC_ASSERT( credit_request_founded, "credit request not founed!" );
+   FC_ASSERT( credit_request_founded, "credit request not found!" );
    return ret;
 } FC_CAPTURE_AND_RETHROW( ( o ) ) }
 
@@ -270,13 +342,17 @@ object_id_type settle_credit_operation_evaluator::do_apply( const settle_credit_
 
             if( ( *itr ).status != e_credit_object_status::in_progress )
                   FC_ASSERT( 0, "credit request don't accepted!" );
-         
+
+            if(o.borrower != ( *itr ).borrower.borrower)
+                  FC_ASSERT( 0, "Only owner can settle the credit operation!" );
+
             if( ( *itr ).settle_month_elapsed == 0 )
                   settle_sum = ( *itr ).borrower.loan_persent / 12.0 + loan.amount_to_real( ( *itr ).borrower.loan_asset.amount );
             else
                   settle_sum = ( *itr ).creditor.monthly_payment * ( ( *itr ).borrower.loan_period - ( *itr ).settle_month_elapsed );   
             
-            asset settle( settle_sum * 100000, loan.get_id( ) ); 
+            asset settle( settle_sum * pow( 10, loan.precision), loan.get_id( ) );
+
             bool insufficient_balance = db( ).get_balance( borrower_account, loan ).amount >= settle.amount;
             FC_ASSERT( insufficient_balance, "Insufficient Balance" );  
 
@@ -289,8 +365,31 @@ object_id_type settle_credit_operation_evaluator::do_apply( const settle_credit_
                   db( ).adjust_balance( b.borrower.borrower, b.borrower.deposit_asset );
         
                   std::stringstream ss;
-                  ss << db( ).head_block_time( ).to_iso_string( ) << " : " << "Credit complete forced, " << deposit.amount_to_pretty_string( b.borrower.deposit_asset ) << " returned.";
+                  std::string time_json = db( ).head_block_time( ).to_iso_string( );
+                  ss << time_json << " : " << "Credit complete forced, " << deposit.amount_to_pretty_string( b.borrower.deposit_asset ) << " returned.";
                   b.history.push_back( ss.str( ) );
+
+                  boost::property_tree::ptree root, details;
+                  std::stringstream ss_json;
+
+                  if(b.history_json.size())
+                  {
+                        ss_json << b.history_json;
+                        boost::property_tree::read_json(ss_json, root);      
+                        ss_json.str( std::string() );
+                        ss_json.clear();
+                  }      
+                  
+                  details.put("type","credit_complete_forced");
+                  details.put("status","deposit_returned");
+                  details.put("asset",deposit.symbol);
+                  details.put("sum",deposit.amount_to_string( b.borrower.deposit_asset.amount));
+                  root.add_child(time_json, details);
+
+                  boost::property_tree::write_json(ss_json, root);
+                  b.history_json = ss_json.str();
+                  b.history_json.erase(std::remove(b.history_json.begin(), b.history_json.end(), '\n'), b.history_json.end());
+                  b.history_json.erase(std::remove(b.history_json.begin(), b.history_json.end(), ' '), b.history_json.end());
 
                   b.borrower.deposit_asset = asset( 0, deposit.get_id( ) );
                   b.status = e_credit_object_status::complete_normal;
@@ -300,7 +399,7 @@ object_id_type settle_credit_operation_evaluator::do_apply( const settle_credit_
             break;
       }
    }
-   FC_ASSERT( credit_request_founded, "credit request not founed!" );
+   FC_ASSERT( credit_request_founded, "credit request not found!" );
    return ret;
 } FC_CAPTURE_AND_RETHROW( ( o ) ) }
 

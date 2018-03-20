@@ -1,0 +1,20 @@
+./start_cli.sh
+set_password 1111
+unlock 1111
+import_key karma xxx
+import_balance karma ["xxx"] true
+get_account karma
+list_account_balances karma
+upgrade_account karma true
+
+restart!!!
+
+./start_cli.sh
+unlock 1111
+get_account karma
+create_witness karma "" true
+vote_for_witness karma karma true true
+get_witness karma
+
+exchange_rate_set karma [[KRM, 2.0]] true
+exchange_rates_request

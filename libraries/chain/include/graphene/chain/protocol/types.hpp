@@ -135,6 +135,7 @@ namespace graphene { namespace chain {
       worker_object_type,
       balance_object_type,
       credit_object_type,
+      exchange_rate_object_type,
       OBJECT_TYPE_COUNT ///< Sentry value which contains the number of different object types
    };
 
@@ -178,6 +179,7 @@ namespace graphene { namespace chain {
    class balance_object;
    class blinded_balance_object;
    class credit_object;
+   class exchange_rate_object;
 
    typedef object_id< protocol_ids, account_object_type,            account_object>               account_id_type;
    typedef object_id< protocol_ids, asset_object_type,              asset_object>                 asset_id_type;
@@ -194,6 +196,7 @@ namespace graphene { namespace chain {
    typedef object_id< protocol_ids, worker_object_type,             worker_object>                worker_id_type;
    typedef object_id< protocol_ids, balance_object_type,            balance_object>               balance_id_type;
    typedef object_id< protocol_ids, credit_object_type,             credit_object>                credit_id_type;
+   typedef object_id< protocol_ids, exchange_rate_object_type,      exchange_rate_object>         exchange_rate_id_type;
 
    // implementation types
    class global_property_object;
@@ -346,6 +349,7 @@ FC_REFLECT_ENUM( graphene::chain::object_type,
                  (worker_object_type)
                  (balance_object_type)
                  (credit_object_type)
+                 (exchange_rate_object_type)
                  (OBJECT_TYPE_COUNT)
                )
 FC_REFLECT_ENUM( graphene::chain::impl_object_type,
@@ -400,6 +404,7 @@ FC_REFLECT_TYPENAME( graphene::chain::buyback_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::fba_accumulator_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::collateral_bid_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::credit_id_type )
+FC_REFLECT_TYPENAME( graphene::chain::exchange_rate_id_type )
 
 
 FC_REFLECT( graphene::chain::void_t, )

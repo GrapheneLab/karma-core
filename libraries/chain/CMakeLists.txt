@@ -58,6 +58,7 @@ add_library( graphene_chain
              protocol/confidential.cpp
              protocol/vote.cpp
              protocol/credit.cpp
+             protocol/exchange_rate.cpp
 
              genesis_state.cpp
              get_config.cpp
@@ -81,6 +82,7 @@ add_library( graphene_chain
              special_authority.cpp
              buyback.cpp
 	           credit_evaluator.cpp
+             exchange_rate_evaluator.cpp
 
              account_object.cpp
              asset_object.cpp
@@ -88,6 +90,7 @@ add_library( graphene_chain
              proposal_object.cpp
              vesting_balance_object.cpp
 	           credit_object.cpp
+             exchange_rate_object.cpp
 
              block_database.cpp
 

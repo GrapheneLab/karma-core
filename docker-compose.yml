@@ -1,0 +1,12 @@
+version: "2"
+
+services:
+  karma_node:
+    image: karma:0.1
+    container_name: karma_node
+    restart: on-failure
+    ports:
+      - "8090:8090"
+      - "5678:5678"
+    volumes:
+      - ./chain_data:/var/lib/bitshares

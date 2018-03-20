@@ -39,6 +39,7 @@
 #include <graphene/chain/protocol/witness.hpp>
 #include <graphene/chain/protocol/worker.hpp>
 #include <graphene/chain/protocol/credit.hpp>
+#include <graphene/chain/protocol/exchange_rate.hpp>
 
 namespace graphene { namespace chain {
 
@@ -99,7 +100,8 @@ namespace graphene { namespace chain {
             credit_approve_operation,
             credit_request_cancel_operation,
             comment_credit_request_operation,
-            settle_credit_operation
+            settle_credit_operation,
+            exchange_rate_set_operation
          > operation;
 
    /// @} // operations group

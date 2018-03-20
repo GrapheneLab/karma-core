@@ -451,6 +451,7 @@ namespace graphene { namespace chain {
          void update_withdraw_permissions();
          bool check_for_blackswan( const asset_object& mia, bool enable_black_swan = true );
          void process_credit_stories();
+         void process_exchange_rates();
 
          ///Steps performed only at maintenance intervals
          ///@{

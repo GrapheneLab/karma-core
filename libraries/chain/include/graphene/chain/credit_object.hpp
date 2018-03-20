@@ -33,6 +33,9 @@
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include <fc/reflect/reflect.hpp>
 #include <graphene/chain/protocol/config.hpp>
@@ -91,17 +94,21 @@ namespace graphene { namespace chain {
         
          creditor_info creditor;
          time_point_sec request_approvation_time; 
-         uint32_t settle_month_elapsed; 
+         uint32_t settle_month_elapsed;
+
+         uint32_t expired_time_start = 0; 
 
          std::map<string,account_id_type> comments;
          std::vector<string> history;
-
+         std::string history_json;
+         
          void              process( graphene::chain::database* db );
          void              on_next_month( graphene::chain::database* db );
-         void              settle_monthly_payment( double sattle_amount, graphene::chain::database* db );         
-         void              settle_from_deposit( double sattle_amount, graphene::chain::database* db );
+         void              settle_monthly_payment( graphene::chain::database* db );
+         void              check_expired_pay_time( graphene::chain::database* db );         
+         void              settle_from_deposit( graphene::chain::database* db );
          void              complete_credit_operation( graphene::chain::database* db );      
-         void              check_deposit_quotes( graphene::chain::database* db );
+         bool              check_deposit_quotes( graphene::chain::database* db );
          void              complete_credit_operation_ubnormal( graphene::chain::database* db );           
 
          double            calculate_monthly_payment( double loan_sum, double annual_loan_rate, uint32_t loan_period_in_moths );
@@ -142,6 +149,8 @@ FC_REFLECT_DERIVED( graphene::chain::credit_object,
                    ( creditor )
                    ( request_approvation_time )
                    ( settle_month_elapsed )
+                   ( expired_time_start )
                    ( comments )
                    ( history )
+                   ( history_json )
                   )
