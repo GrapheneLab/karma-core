@@ -1,4 +1,4 @@
 // history of karma (rating) added
 #ifndef HARDFORK_CORE_KARMA_2_TIME
-#define HARDFORK_CORE_KARMA_2_TIME (fc::time_point_sec::from_iso_string("2018-04-13T00:00:00")) 
+#define HARDFORK_CORE_KARMA_2_TIME (fc::time_point_sec::from_iso_string("2018-04-13T10:00:00")) 
 #endif

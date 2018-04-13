@@ -2,7 +2,7 @@ version: "2"
 
 services:
   karma_node:
-    image: karma:0.1
+    image: karma:t0.5
     container_name: karma_node
     restart: on-failure
     ports:
