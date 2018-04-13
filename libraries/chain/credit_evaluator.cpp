@@ -89,6 +89,15 @@ void_result credit_request_evaluator::do_evaluate( const credit_request_operatio
                   return void_result( );
             } FC_RETHROW_EXCEPTIONS( error, "Unable to deposit ${a}", ( "a",d.to_pretty_string( op.loan_asset ) ) );
       }
+
+      if( db().head_block_time() >= HARDFORK_CORE_KARMA_2_TIME )
+      {
+            const auto& idx = db().get_index_type<account_index>().indices().get<by_name>();
+            std::string special_account_name = db().get_global_properties().parameters.get_bonus_options().special_account_name;
+            auto itr_account_obj = idx.find(special_account_name);
+            FC_ASSERT( itr_account_obj != idx.end(), "No special account found: ${a}.",("a", special_account_name));
+      }
+
       return void_result();      
 }  FC_CAPTURE_AND_RETHROW( ( op ) ) }
 
@@ -232,9 +241,34 @@ object_id_type credit_approve_evaluator::do_apply( const credit_approve_operatio
 
                   ret = b.id;            
             });
-            // transfer money to borrower
+
             db( ).adjust_balance( ( *itr ).creditor.creditor, -( *itr ).borrower.loan_asset );
-            db( ).adjust_balance( ( *itr ).borrower.borrower, ( *itr ).borrower.loan_asset );   
+
+            // pay %bonus from credit sum to special karma account and referals
+            if( db().head_block_time() >= HARDFORK_CORE_KARMA_2_TIME )
+            {
+                  chain_parameters::ext::credit_referrer_bonus_options bo = db().get_global_properties().parameters.get_bonus_options();
+
+                  auto idx = db().get_index_type<account_index>().indices().get<by_name>().find(bo.special_account_name);
+                  account_id_type special_account_id = (*idx).get_id();
+
+                  double creditor_percent = (db().head_block_time() < ( *itr ).creditor.creditor(db()).credit_referrer_expiration_date) ? bo.creditor_referrer_bonus : 0;
+                  double borrower_percent = (db().head_block_time() < ( *itr ).borrower.borrower(db()).credit_referrer_expiration_date) ? bo.borrower_referrer_bonus : 0;
+                  double special_account_percent = bo.karma_account_bonus - borrower_percent - creditor_percent;
+
+                  asset asset_sum_for_creditor(( *itr ).borrower.loan_asset.amount.value * creditor_percent/100, loan_asset_type.get_id());
+                  asset asset_sum_for_borrower(( *itr ).borrower.loan_asset.amount.value * borrower_percent/100, loan_asset_type.get_id());
+                  asset asset_sum_to_special_account(( *itr ).borrower.loan_asset.amount.value * special_account_percent/100, loan_asset_type.get_id());
+
+                  db( ).adjust_balance( ( *itr ).creditor.creditor(db()).credit_referrer, asset_sum_for_creditor);
+                  db( ).adjust_balance( ( *itr ).borrower.borrower(db()).credit_referrer, asset_sum_for_borrower);   
+                  db( ).adjust_balance( special_account_id, asset_sum_to_special_account);   
+
+                  db( ).adjust_balance( ( *itr ).borrower.borrower, ( *itr ).borrower.loan_asset 
+                                                - asset_sum_for_creditor - asset_sum_for_borrower - asset_sum_to_special_account);   
+            }
+            else
+                db( ).adjust_balance( ( *itr ).borrower.borrower, ( *itr ).borrower.loan_asset );   
                      
             credit_request_founded = true;
             break;
@@ -364,6 +398,8 @@ object_id_type settle_credit_operation_evaluator::do_apply( const settle_credit_
                   const asset_object& deposit = b.borrower.deposit_asset.asset_id( d );
                   db( ).adjust_balance( b.borrower.borrower, b.borrower.deposit_asset );
         
+                  update_account_karma(&db(), b.borrower.borrower, KARMA_BONUS_FOR_CREDIT_PAYMENT, "Credit complete forced.");
+
                   std::stringstream ss;
                   std::string time_json = db( ).head_block_time( ).to_iso_string( );
                   ss << time_json << " : " << "Credit complete forced, " << deposit.amount_to_pretty_string( b.borrower.deposit_asset ) << " returned.";

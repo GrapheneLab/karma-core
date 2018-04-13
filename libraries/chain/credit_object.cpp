@@ -5,9 +5,6 @@
 #include <graphene/chain/hardfork.hpp>
 #include <fc/uint128.hpp>
 
-#define SECONDS_PER_DAY 86400
-#define SECONDS_PER_MONTH 2592000
-
 namespace graphene { namespace chain 
 {
     void credit_object::process( graphene::chain::database* db )
@@ -78,6 +75,8 @@ namespace graphene { namespace chain
         db->adjust_balance( borrower.borrower, -tmp );
         db->adjust_balance( creditor.creditor, tmp );
 
+        update_account_karma(db, borrower.borrower, KARMA_BONUS_FOR_MONTHLY_PAYMENT, "Settle monthly payment complete normal.");
+
         expired_time_start = 0;
 
         std::stringstream ss;
@@ -121,7 +120,9 @@ namespace graphene { namespace chain
             asset tmp( creditor.monthly_payment * pow(10, loan.precision), loan.get_id( ) ); 
          
             expired_time_start = db->head_block_time( ).sec_since_epoch( );
-                
+
+            update_account_karma(db, borrower.borrower, KARMA_PENALTY_FOR_MONTHLY_DELAY, "Settle monthly payment complete ubnormal: insufficient balance.");
+
             std::stringstream ss;
             std::string time_json = db->head_block_time( ).to_iso_string( );
             ss << time_json << " : " << "Settle monthly payment complete ubnormal: insufficient balance. " 
@@ -176,14 +177,14 @@ namespace graphene { namespace chain
         double deposit_exchange_rate = get_exchange_rate_by_symbol(db, deposit.symbol);
         double loan_exchange_rate = get_exchange_rate_by_symbol(db, loan.symbol);
 
-        double loan_left_on_deposit = loan.amount_to_real( db->get_balance( borrower.borrower, loan.get_id( ) ).amount );
-        double debt_in_deposit = (creditor.monthly_payment - loan_left_on_deposit) * loan_exchange_rate/deposit_exchange_rate;
+        double loan_left_on_borrower_account = loan.amount_to_real( db->get_balance( borrower.borrower, loan.get_id( ) ).amount );
+        double debt_in_deposit = (creditor.monthly_payment - loan_left_on_borrower_account) * loan_exchange_rate/deposit_exchange_rate;
 
         double deposit_to_core = debt_in_deposit * deposit_exchange_rate;
         double loan_to_core = creditor.monthly_payment * loan_exchange_rate;
 
-        // try return settle_amount = loan_left_on_deposit + debt_in_deposit
-        asset loan_asset_from_borrower(loan_left_on_deposit * pow(10, loan.precision),loan.get_id());
+        // try return settle_amount = loan_left_on_borrower_account + debt_in_deposit
+        asset loan_asset_from_borrower(loan_left_on_borrower_account * pow(10, loan.precision),loan.get_id());
         asset deposit_asset_from_deposit(debt_in_deposit * pow(10, deposit.precision), deposit.get_id());
         asset loan_asset_to_creditor(creditor.monthly_payment * pow(10, loan.precision),loan.get_id());
 
@@ -192,7 +193,7 @@ namespace graphene { namespace chain
         if( deposit_left < debt_in_deposit )
         {
             double loan_from_all_deposit = deposit_left * deposit_exchange_rate / loan_exchange_rate;
-            loan_asset_to_creditor.amount = (loan_from_all_deposit + loan_left_on_deposit) * pow(10, loan.precision);
+            loan_asset_to_creditor.amount = (loan_from_all_deposit + loan_left_on_borrower_account) * pow(10, loan.precision);
             deposit_asset_from_deposit.amount = deposit_left * pow(10, deposit.precision);    
             fail = true;
         }
@@ -201,14 +202,18 @@ namespace graphene { namespace chain
         db->adjust_balance( creditor.creditor, loan_asset_to_creditor );
         borrower.deposit_asset -= deposit_asset_from_deposit;
         
-        auto itr_account_obj = db->get_index_type<account_index>().indices().get<by_name>().find("karma");
-        account_id_type karma_id = (*itr_account_obj).get_id();
-        db->adjust_balance( karma_id, deposit_asset_from_deposit );
+        // check convertation
+        if(loan_asset_from_borrower.asset_id != loan_asset_to_creditor.asset_id)
+        {
+            auto itr_account_obj = db->get_index_type<account_index>().indices().get<by_name>().find(SPECIAL_CONVERSION_ACCOUNT);
+            account_id_type karma_id = (*itr_account_obj).get_id();
+            db->adjust_balance( karma_id, deposit_asset_from_deposit );
         
-        double loan_need_to_be_balanced = deposit.amount_to_real(deposit_asset_from_deposit.amount) * deposit_exchange_rate/loan_exchange_rate;
-        db->modify(loan.dynamic_asset_data_id(*db), [&](asset_dynamic_data_object& dynamic_asset) {
-         dynamic_asset.current_supply += loan_need_to_be_balanced*pow(10,loan.precision);
-        });
+            double loan_need_to_be_balanced = deposit.amount_to_real(deposit_asset_from_deposit.amount) * deposit_exchange_rate/loan_exchange_rate;
+            db->modify(loan.dynamic_asset_data_id(*db), [&](asset_dynamic_data_object& dynamic_asset) {
+            dynamic_asset.current_supply += loan_need_to_be_balanced*pow(10,loan.precision);
+            });
+        }    
 
         std::stringstream ss;
         std::string time_json = db->head_block_time( ).to_iso_string( );
@@ -263,6 +268,8 @@ namespace graphene { namespace chain
         const asset_object& deposit = borrower.deposit_asset.asset_id( *db );
         db->adjust_balance( borrower.borrower, borrower.deposit_asset );
         
+        update_account_karma(db, borrower.borrower, KARMA_BONUS_FOR_CREDIT_PAYMENT, "Credit complete normal.");
+
         std::stringstream ss;
         std::string time_json = db->head_block_time( ).to_iso_string( );
         ss << time_json << " : " << "Credit complete normal, " << deposit.amount_to_pretty_string( borrower.deposit_asset ) << " returned.";
@@ -300,11 +307,13 @@ namespace graphene { namespace chain
         const asset_object& deposit = borrower.deposit_asset.asset_id( *db );
         const asset_object& loan = borrower.loan_asset.asset_id( *db );
 
-        double loan_left_on_deposit = loan.amount_to_real( db->get_balance( borrower.borrower, loan.get_id( ) ).amount );
-        asset loan_asset_to_creditor( loan_left_on_deposit * pow(10, loan.precision), loan.get_id( ) );
+        double loan_left_on_borrower_account = loan.amount_to_real( db->get_balance( borrower.borrower, loan.get_id( ) ).amount );
+        asset loan_asset_to_creditor( loan_left_on_borrower_account * pow(10, loan.precision), loan.get_id( ) );
 
         db->adjust_balance( borrower.borrower, -loan_asset_to_creditor );
         db->adjust_balance( creditor.creditor, loan_asset_to_creditor );
+
+        update_account_karma(db, borrower.borrower, KARMA_PENALTY_FOR_CREDIT_DEFAULT, "Credit complete ubnormal.");
 
         std::stringstream ss;
         std::string time_json = db->head_block_time( ).to_iso_string( );
@@ -355,7 +364,7 @@ namespace graphene { namespace chain
         
         // Complete credit Stop-Loss Order
         double loan_for_return = creditor.monthly_payment * ( borrower.loan_period - settle_month_elapsed );
-        double loan_left_on_deposit = loan.amount_to_real( db->get_balance( borrower.borrower, loan.get_id( ) ).amount );
+        double loan_left_on_borrower_account = loan.amount_to_real( db->get_balance( borrower.borrower, loan.get_id( ) ).amount );
 
         // ideal situation - we have enough loan asset on borrower account
         asset loan_asset_from_borrower(loan_for_return * pow(10, loan.precision),loan.get_id());
@@ -363,10 +372,10 @@ namespace graphene { namespace chain
         asset deposit_asset_from_deposit(0, deposit.get_id());
    
         // if situation not ideal
-        if( loan_left_on_deposit < loan_for_return )
+        if( loan_left_on_borrower_account < loan_for_return )
         {
-            loan_asset_from_borrower.amount = loan_left_on_deposit * pow(10, loan.precision); 
-            double debt_in_deposit = (loan_for_return - loan_left_on_deposit) * loan_exchange_rate/deposit_exchange_rate;
+            loan_asset_from_borrower.amount = loan_left_on_borrower_account * pow(10, loan.precision); 
+            double debt_in_deposit = (loan_for_return - loan_left_on_borrower_account) * loan_exchange_rate/deposit_exchange_rate;
             deposit_asset_from_deposit.amount = debt_in_deposit * pow(10, deposit.precision);
         
             double deposit_left = deposit.amount_to_real( borrower.deposit_asset.amount );
@@ -375,7 +384,7 @@ namespace graphene { namespace chain
             if( deposit_left < debt_in_deposit )
             {
                 double loan_from_all_deposit = deposit_left * deposit_exchange_rate / loan_exchange_rate;
-                loan_asset_to_creditor.amount = (loan_from_all_deposit + loan_left_on_deposit) * pow(10, loan.precision);
+                loan_asset_to_creditor.amount = (loan_from_all_deposit + loan_left_on_borrower_account) * pow(10, loan.precision);
                 deposit_asset_from_deposit.amount = deposit_left * pow(10, deposit.precision);    
             }
         }    
@@ -384,14 +393,17 @@ namespace graphene { namespace chain
         db->adjust_balance( creditor.creditor, loan_asset_to_creditor );
         borrower.deposit_asset -= deposit_asset_from_deposit;
         
-        auto itr_account_obj = db->get_index_type<account_index>().indices().get<by_name>().find("karma");
-        account_id_type karma_id = (*itr_account_obj).get_id();
-        db->adjust_balance( karma_id, deposit_asset_from_deposit );
+        if(loan_asset_from_borrower.asset_id != loan_asset_to_creditor.asset_id)
+        {
+            auto itr_account_obj = db->get_index_type<account_index>().indices().get<by_name>().find(SPECIAL_CONVERSION_ACCOUNT);
+            account_id_type karma_id = (*itr_account_obj).get_id();
+            db->adjust_balance( karma_id, deposit_asset_from_deposit );
 
-        double loan_need_to_be_balanced = deposit.amount_to_real(deposit_asset_from_deposit.amount) * deposit_exchange_rate/loan_exchange_rate;
-        db->modify(loan.dynamic_asset_data_id(*db), [&](asset_dynamic_data_object& dynamic_asset) {
-         dynamic_asset.current_supply += loan_need_to_be_balanced*pow(10,loan.precision);
-        });
+            double loan_need_to_be_balanced = deposit.amount_to_real(deposit_asset_from_deposit.amount) * deposit_exchange_rate/loan_exchange_rate;
+            db->modify(loan.dynamic_asset_data_id(*db), [&](asset_dynamic_data_object& dynamic_asset) {
+            dynamic_asset.current_supply += loan_need_to_be_balanced*pow(10,loan.precision);
+            });
+        }    
         
         db->adjust_balance( borrower.borrower, borrower.deposit_asset );
 

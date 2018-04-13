@@ -71,6 +71,7 @@
 #include <graphene/wallet/reflect_util.hpp>
 #include <graphene/debug_witness/debug_api.hpp>
 #include <fc/smart_ref_impl.hpp>
+#include <graphene/chain/hardfork.hpp>
 
 #ifndef WIN32
 # include <sys/types.h>
@@ -917,6 +918,7 @@ public:
                                        public_key_type active,
                                        string  registrar_account,
                                        string  referrer_account,
+                                       string  credit_referrer_account,
                                        uint32_t referrer_percent,
                                        bool broadcast = false)
    { try {
@@ -941,6 +943,14 @@ public:
       account_create_op.referrer = referrer_account_object.id;
       account_create_op.referrer_percent = uint16_t( referrer_percent * GRAPHENE_1_PERCENT );
 
+      auto dyn_props = get_dynamic_global_properties();
+
+      if( dyn_props.time >= HARDFORK_CORE_KARMA_2_TIME )
+      {
+            account_object credit_referrer_account_object = this->get_account( credit_referrer_account );
+            account_create_op.extensions.value.credit_referrer = credit_referrer_account_object.id;
+      }      
+
       account_create_op.registrar = registrar_account_id;
       account_create_op.name = name;
       account_create_op.owner = authority(1, owner, 1);
@@ -956,7 +966,6 @@ public:
 
       vector<public_key_type> paying_keys = registrar_account_object.active.get_keys();
 
-      auto dyn_props = get_dynamic_global_properties();
       tx.set_reference_block( dyn_props.head_block_id );
       tx.set_expiration( dyn_props.time + fc::seconds(30) );
       tx.validate();
@@ -978,7 +987,7 @@ public:
       if( broadcast )
          _remote_net_broadcast->broadcast_transaction( tx );
       return tx;
-   } FC_CAPTURE_AND_RETHROW( (name)(owner)(active)(registrar_account)(referrer_account)(referrer_percent)(broadcast) ) }
+   } FC_CAPTURE_AND_RETHROW( (name)(owner)(active)(registrar_account)(referrer_account)(credit_referrer_account)(referrer_percent)(broadcast) ) }
 
 
    signed_transaction upgrade_account(string name, bool broadcast)
@@ -1038,6 +1047,7 @@ public:
                                                       string account_name,
                                                       string registrar_account,
                                                       string referrer_account,
+                                                      string credit_referrer_account,
                                                       bool broadcast = false,
                                                       bool save_wallet = true)
    { try {
@@ -1063,6 +1073,14 @@ public:
          account_create_op.referrer = referrer_account_object.id;
          account_create_op.referrer_percent = referrer_account_object.referrer_rewards_percentage;
 
+         auto dyn_props = get_dynamic_global_properties();
+
+         if( dyn_props.time >= HARDFORK_CORE_KARMA_2_TIME )
+         {
+            account_object credit_referrer_account_object = get_account( credit_referrer_account );
+            account_create_op.extensions.value.credit_referrer = credit_referrer_account_object.id;
+         }   
+
          account_create_op.registrar = registrar_account_id;
          account_create_op.name = account_name;
          account_create_op.owner = authority(1, owner_pubkey, 1);
@@ -1082,7 +1100,6 @@ public:
 
          vector<public_key_type> paying_keys = registrar_account_object.active.get_keys();
 
-         auto dyn_props = get_dynamic_global_properties();
          tx.set_reference_block( dyn_props.head_block_id );
          tx.set_expiration( dyn_props.time + fc::seconds(30) );
          tx.validate();
@@ -1107,12 +1124,13 @@ public:
          if( broadcast )
             _remote_net_broadcast->broadcast_transaction( tx );
          return tx;
-   } FC_CAPTURE_AND_RETHROW( (account_name)(registrar_account)(referrer_account)(broadcast) ) }
+   } FC_CAPTURE_AND_RETHROW( (account_name)(registrar_account)(referrer_account)(credit_referrer_account)(broadcast) ) }
 
    signed_transaction create_account_with_brain_key(string brain_key,
                                                     string account_name,
                                                     string registrar_account,
                                                     string referrer_account,
+                                                    string credit_referrer_account,
                                                     bool broadcast = false,
                                                     bool save_wallet = true)
    { try {
@@ -1120,8 +1138,8 @@ public:
       string normalized_brain_key = normalize_brain_key( brain_key );
       // TODO:  scan blockchain for accounts that exist with same brain key
       fc::ecc::private_key owner_privkey = derive_private_key( normalized_brain_key, 0 );
-      return create_account_with_private_key(owner_privkey, account_name, registrar_account, referrer_account, broadcast, save_wallet);
-   } FC_CAPTURE_AND_RETHROW( (account_name)(registrar_account)(referrer_account) ) }
+      return create_account_with_private_key(owner_privkey, account_name, registrar_account, referrer_account, credit_referrer_account, broadcast, save_wallet);
+   } FC_CAPTURE_AND_RETHROW( (account_name)(registrar_account)(referrer_account)(credit_referrer_account) ) }
 
 
    signed_transaction create_asset(string issuer,
@@ -2437,11 +2455,30 @@ public:
       const chain_parameters& current_params = get_global_properties().parameters;
       chain_parameters new_params = current_params;
       chain_parameters::ext::credit_options new_credit_options = new_params.get_credit_options();
+      chain_parameters::ext::credit_referrer_bonus_options new_bonus_options = new_params.get_bonus_options();
 
-      // check extensions
+      // check credit options extensions
       fc::reflector<chain_parameters::ext::credit_options>::visit(
             fc::from_variant_visitor<chain_parameters::ext::credit_options>( changed_values, new_credit_options )
             );
+
+      auto dyn_props = get_dynamic_global_properties();
+
+      if( dyn_props.time >= HARDFORK_CORE_KARMA_2_TIME )
+      {
+            // check bonus extensions
+            fc::reflector<chain_parameters::ext::credit_referrer_bonus_options>::visit(
+            fc::from_variant_visitor<chain_parameters::ext::credit_referrer_bonus_options>( changed_values, new_bonus_options )
+            );
+      }
+      else
+      {
+            for( chain_parameters::parameter_extension& e : new_params.extensions )
+            {
+                  if( e.which() == chain_parameters::parameter_extension::tag<chain_parameters::ext::credit_referrer_bonus_options>::value )
+                       new_params.extensions.erase(e);
+            }
+      }
 
       fc::reflector<chain_parameters>::visit(
          fc::from_variant_visitor<chain_parameters>( changed_values, new_params )
@@ -2450,6 +2487,11 @@ public:
       committee_member_update_global_parameters_operation update_op;
       update_op.new_parameters = new_params;
       update_op.new_parameters.set_credit_options(new_credit_options);
+      
+      if( dyn_props.time >= HARDFORK_CORE_KARMA_2_TIME )
+      {
+            update_op.new_parameters.set_bonus_options(new_bonus_options);
+      }
 
       proposal_create_operation prop_op;
 
@@ -2709,7 +2751,7 @@ public:
          {
             std::ostringstream brain_key;
             brain_key << "brain key for account " << prefix << i;
-            signed_transaction trx = create_account_with_brain_key(brain_key.str(), prefix + fc::to_string(i), master.name, master.name, /* broadcast = */ true, /* save wallet = */ false);
+            signed_transaction trx = create_account_with_brain_key(brain_key.str(), prefix + fc::to_string(i), master.name, master.name, master.name,/* broadcast = */ true, /* save wallet = */ false);
          }
          fc::time_point end = fc::time_point::now();
          ilog("Created ${n} accounts in ${time} milliseconds",
@@ -2973,6 +3015,28 @@ vector<credit_object> wallet_api::fetch_credit_requests_stack( uint32_t from_ind
                                                           loan_volume_from, loan_volume_to, cyrrency_symbol, user_id, status );
 }
 
+vector<credit_object> wallet_api::fetch_credit_requests_stack_by_creditor( uint32_t from_index,
+                                                                      uint32_t elements_count,
+                                                                      uint32_t loan_persent_from,
+                                                                      uint32_t loan_persent_to,
+                                                                      uint32_t deposit_persent_from,
+                                                                      uint32_t deposit_persent_to,
+                                                                      uint32_t loan_volume_from,
+                                                                      uint32_t loan_volume_to,
+                                                                      std::string cyrrency_symbol,
+                                                                      std::string creditor_user_id,
+                                                                      uint32_t status
+                                                                    ) const
+{
+      return my->_remote_db->fetch_credit_requests_stack_by_creditor( from_index, elements_count, loan_persent_from, loan_persent_to, deposit_persent_from, deposit_persent_to,
+                                                          loan_volume_from, loan_volume_to, cyrrency_symbol, creditor_user_id, status );
+}
+
+
+std::vector<karma_history_entry> wallet_api::list_account_history_of_karma(std::string account_id) const
+{
+      return my->_remote_db->list_account_history_of_karma(account_id);
+}
 
 map<string, string> wallet_api::list_last_exchange_rates() const
 {
@@ -3396,18 +3460,19 @@ signed_transaction wallet_api::register_account(string name,
                                                 public_key_type active_pubkey,
                                                 string  registrar_account,
                                                 string  referrer_account,
+                                                string credit_referrer_account,
                                                 uint32_t referrer_percent,
                                                 bool broadcast)
 {
-   return my->register_account( name, owner_pubkey, active_pubkey, registrar_account, referrer_account, referrer_percent, broadcast );
+   return my->register_account( name, owner_pubkey, active_pubkey, registrar_account, referrer_account, credit_referrer_account, referrer_percent, broadcast );
 }
 signed_transaction wallet_api::create_account_with_brain_key(string brain_key, string account_name,
-                                                             string registrar_account, string referrer_account,
+                                                             string registrar_account, string referrer_account, string credit_referrer_account,
                                                              bool broadcast /* = false */)
 {
    return my->create_account_with_brain_key(
-            brain_key, account_name, registrar_account,
-            referrer_account, broadcast
+            brain_key, account_name, registrar_account, referrer_account,
+            credit_referrer_account, broadcast
             );
 }
 signed_transaction wallet_api::issue_asset(string to_account, string amount, string symbol,
@@ -3818,7 +3883,7 @@ string wallet_api::gethelp(const string& method)const
    {
       ss << "usage: create_account_with_brain_key BRAIN_KEY ACCOUNT_NAME REGISTRAR REFERRER BROADCAST\n\n";
       ss << "example: create_account_with_brain_key \"my really long brain key\" \"newaccount\" \"1.3.11\" \"1.3.11\" true\n";
-      ss << "example: create_account_with_brain_key \"my really long brain key\" \"newaccount\" \"someaccount\" \"otheraccount\" true\n";
+      ss << "example: create_account_with_brain_key \"my really long brain key\" \"newaccount\" \"someaccount\" \"otheraccount\" \"otheraccount\" true\n";
       ss << "\n";
       ss << "This method should be used if you would like the wallet to generate new keys derived from the brain key.\n";
       ss << "The BRAIN_KEY will be used as the owner key, and the active key will be derived from the BRAIN_KEY.  Use\n";

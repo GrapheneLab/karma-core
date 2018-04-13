@@ -24,6 +24,7 @@
 #include <algorithm>
 #include <graphene/chain/protocol/fee_schedule.hpp>
 #include <fc/smart_ref_impl.hpp>
+#include <graphene/chain/hardfork.hpp>
 
 namespace fc
 {
@@ -195,20 +196,24 @@ namespace graphene { namespace chain {
       
       if( extensions.size() > 0 )
       {
-      ext::credit_options new_credit_options = get_credit_options(); 
+          ext::credit_options new_credit_options = get_credit_options(); 
 
-      FC_ASSERT( new_credit_options.seconds_per_day > 0,
+          FC_ASSERT( new_credit_options.seconds_per_day > 0,
                  "Seconds_per_day interval must be greater than zero" );
-      FC_ASSERT( new_credit_options.max_credit_expiration_days >= 0,
+          FC_ASSERT( new_credit_options.max_credit_expiration_days >= 0,
                  "Max credit expiration days interval must be greater or equal than zero" );                 
-      FC_ASSERT( new_credit_options.min_witnesses_for_exchange_rate > 0,
+          FC_ASSERT( new_credit_options.min_witnesses_for_exchange_rate > 0,
                   "Min witnesses for set exchange rate must be greater than zero" );                 
-      FC_ASSERT( new_credit_options.exchange_rate_set_min_interval > 0,
+          FC_ASSERT( new_credit_options.exchange_rate_set_min_interval > 0,
                   "Exchange rate set min interval must be greater than zero" );                 
-      FC_ASSERT( new_credit_options.exchange_rate_set_max_interval > 0,
+          FC_ASSERT( new_credit_options.exchange_rate_set_max_interval > 0,
                   "Exchange rate set max interval must be greater than zero" );
-      FC_ASSERT( new_credit_options.exchange_rate_set_min_interval <= new_credit_options.exchange_rate_set_max_interval,
-                  "Exchange rate min interval must be less or equal than exchange rate max interval" );                  
+          FC_ASSERT( new_credit_options.exchange_rate_set_min_interval <= new_credit_options.exchange_rate_set_max_interval,
+                  "Exchange rate min interval must be less or equal than exchange rate max interval" );
+      
+          ext::credit_referrer_bonus_options new_bonus_options = get_bonus_options(); 
+          FC_ASSERT( new_bonus_options.creditor_referrer_bonus + new_bonus_options.borrower_referrer_bonus  <= new_bonus_options.karma_account_bonus,
+                  "The sum of creditor and borrower referrer bonuses must be less or equal than karma account bonus"  );                  
       }            
    }
 

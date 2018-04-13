@@ -44,6 +44,16 @@ namespace graphene { namespace chain {
             uint32_t exchange_rate_set_max_interval = 3600; ///< max interval in seconds waiting for witnesses set rates
             uint32_t exchange_rate_set_min_interval = 75; ///< interval in seconds after which looking for min witnesses set rates
          };
+
+         struct credit_referrer_bonus_options
+         {
+           float karma_account_bonus = 0.5;
+           float creditor_referrer_bonus = 0.1;
+           float borrower_referrer_bonus = 0.1;
+           float fail_creditor_referrer_bonus = 0;
+           float fail_borrower_referrer_bonus = 0;
+           std::string special_account_name = "ooo-karma-rus";
+         };
       };
 
       /** using a smart ref breaks the circular dependency created between operations and the fee schedule */
@@ -77,7 +87,7 @@ namespace graphene { namespace chain {
       uint8_t                 account_fee_scale_bitshifts         = GRAPHENE_DEFAULT_ACCOUNT_FEE_SCALE_BITSHIFTS; ///< number of times to left bitshift account registration fee at each scaling
       uint8_t                 max_authority_depth                 = GRAPHENE_MAX_SIG_CHECK_DEPTH;
       
-      typedef static_variant<ext::credit_options>  parameter_extension;
+      typedef static_variant<ext::credit_options, ext::credit_referrer_bonus_options>  parameter_extension;
       typedef flat_set<parameter_extension> extensions_type;
       extensions_type         extensions;
 
@@ -97,10 +107,45 @@ namespace graphene { namespace chain {
         return ext::credit_options();
       }
 
+      const ext::credit_referrer_bonus_options get_bonus_options()const
+      {
+        if( extensions.size() > 0 )
+        {
+          for( const parameter_extension& e : extensions )
+          {
+                  if( e.which() == parameter_extension::tag<ext::credit_referrer_bonus_options>::value )
+                      return e.get<ext::credit_referrer_bonus_options>();
+          }
+        }
+        return ext::credit_referrer_bonus_options();
+      }
+
       void set_credit_options(ext::credit_options& new_co)
       {
-        extensions.clear();
+        for( chain_parameters::parameter_extension& e : extensions )
+        {
+          if( e.which() == chain_parameters::parameter_extension::tag<chain_parameters::ext::credit_options>::value )
+          {
+            e.get<chain_parameters::ext::credit_options>() = new_co;
+            return;
+          }
+        }
+
         extensions.insert(new_co);
+      }
+
+      void set_bonus_options(ext::credit_referrer_bonus_options& new_bo)
+      {
+        for( chain_parameters::parameter_extension& e : extensions )
+        {
+          if( e.which() == chain_parameters::parameter_extension::tag<chain_parameters::ext::credit_referrer_bonus_options>::value )
+          {
+            e.get<chain_parameters::ext::credit_referrer_bonus_options>() = new_bo;
+            return;
+          }
+        }
+
+        extensions.insert(new_bo);
       }
    };
 
@@ -113,6 +158,15 @@ FC_REFLECT( graphene::chain::chain_parameters::ext::credit_options,
             (exchange_rate_set_max_interval)
             (exchange_rate_set_min_interval)
           )
+
+FC_REFLECT( graphene::chain::chain_parameters::ext::credit_referrer_bonus_options,
+            (karma_account_bonus)
+            (creditor_referrer_bonus)
+            (borrower_referrer_bonus)
+            (fail_creditor_referrer_bonus)
+            (fail_borrower_referrer_bonus)
+            (special_account_name)
+          )          
 
 FC_REFLECT_TYPENAME( graphene::chain::chain_parameters::parameter_extension )
 FC_REFLECT_TYPENAME( graphene::chain::chain_parameters::extensions_type )

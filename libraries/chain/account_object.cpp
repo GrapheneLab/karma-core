@@ -25,6 +25,7 @@
 #include <graphene/chain/asset_object.hpp>
 #include <graphene/chain/database.hpp>
 #include <graphene/chain/hardfork.hpp>
+#include <graphene/chain/credit_object.hpp>
 #include <fc/uint128.hpp>
 
 namespace graphene { namespace chain {
@@ -265,6 +266,35 @@ void account_referrer_index::about_to_modify( const object& before )
 }
 void account_referrer_index::object_modified( const object& after  )
 {
+}
+
+void account_object::update_karma(float amount)
+{
+    karma += amount;
+
+    if(karma < KARMA_MIN_VALUE)
+        karma = KARMA_MIN_VALUE;
+    if(karma > KARMA_MAX_VALUE)
+        karma = KARMA_MAX_VALUE;
+}
+
+void update_account_karma(graphene::chain::database* db, account_id_type account_id, float amount, std::string info)
+{
+    db->modify(account_id( *db ), [amount](account_object& account) {
+        account.update_karma(amount);
+    });
+
+    auto& account_history_of_karma_objs = db->get_index_type<account_history_of_karma_index>().indices().get<by_id>();
+    for (auto itr = account_history_of_karma_objs.begin( ); itr != account_history_of_karma_objs.end( ); itr++ )
+    {
+        if(account_id == (*itr).account)
+        {
+            account_history_of_karma_id_type obj_history_id = (*itr).id;
+            db->modify(obj_history_id( *db ), [&](account_history_of_karma_object& history) {
+               history.add_history_entry(db->head_block_time(), amount, info);
+            });
+        }    
+    }
 }
 
 } } // graphene::chain

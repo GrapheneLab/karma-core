@@ -36,6 +36,7 @@
 #include <graphene/chain/special_authority_object.hpp>
 #include <graphene/chain/witness_object.hpp>
 #include <graphene/chain/worker_object.hpp>
+#include <graphene/chain/credit_object.hpp>
 
 #include <algorithm>
 
@@ -130,6 +131,13 @@ void_result account_create_evaluator::do_evaluate( const account_create_operatio
       FC_ASSERT( !op.extensions.value.buyback_options.valid() );
    }
 
+   if(d.head_block_time() < HARDFORK_CORE_KARMA_2_TIME )
+   {
+      FC_ASSERT( !op.extensions.value.credit_referrer.valid(), "Operation has an extension which requires hardfork HARDFORK_KARMA_CORE_2.");
+   }
+   else
+      FC_ASSERT( op.extensions.value.credit_referrer.valid() );
+
    FC_ASSERT( d.find_object(op.options.voting_account), "Invalid proxy account specified." );
    FC_ASSERT( fee_paying_account->is_lifetime_member(), "Only Lifetime members may register an account." );
    FC_ASSERT( op.referrer(d).is_member(d.head_block_time()), "The referrer must be either a lifetime or annual subscriber." );
@@ -188,6 +196,13 @@ object_id_type account_create_evaluator::do_apply( const account_create_operatio
          obj.referrer = o.referrer;
          obj.lifetime_referrer = o.referrer(db()).lifetime_referrer;
 
+         if(d.head_block_time() >= HARDFORK_CORE_KARMA_2_TIME )
+            obj.credit_referrer = *o.extensions.value.credit_referrer;
+         else
+            obj.credit_referrer = obj.referrer;
+            
+         obj.credit_referrer_expiration_date = db().head_block_time() + fc::days(375);
+
          auto& params = db().get_global_properties().parameters;
          obj.network_fee_percentage = params.network_percent_of_fee;
          obj.lifetime_referrer_fee_percentage = params.lifetime_referrer_percent_of_fee;
@@ -198,6 +213,12 @@ object_id_type account_create_evaluator::do_apply( const account_create_operatio
          obj.active           = o.active;
          obj.options          = o.options;
          obj.statistics = db().create<account_statistics_object>([&](account_statistics_object& s){s.owner = obj.id;}).id;
+
+         db().create<account_history_of_karma_object>([&](account_history_of_karma_object& h)
+         {
+                  h.account = obj.id;
+                  h.add_history_entry(db().head_block_time(), KARMA_BONUS_FOR_ACCOUNT_CREATE, "Account created.");
+         });
 
          if( o.extensions.value.owner_special_authority.valid() )
             obj.owner_special_authority = *(o.extensions.value.owner_special_authority);

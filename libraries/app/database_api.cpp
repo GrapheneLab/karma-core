@@ -78,6 +78,19 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
                                                                       std::string user_id,
                                                                       uint32_t status
                                                                     ) const;
+      vector<credit_object>           fetch_credit_requests_stack_by_creditor( uint32_t from_index,
+                                                                      uint32_t elements_count,
+                                                                      uint32_t loan_persent_from,
+                                                                      uint32_t loan_persent_to,
+                                                                      uint32_t deposit_persent_from,
+                                                                      uint32_t deposit_persent_to,
+                                                                      uint32_t loan_volume_from,
+                                                                      uint32_t loan_volume_to,
+                                                                      std::string cyrrency_symbol,
+                                                                      std::string creditor_user_id,
+                                                                      uint32_t status
+                                                                    ) const;
+    std::vector<karma_history_entry> list_account_history_of_karma(std::string account_id)const;
 
       // Exchange rates request
       map<string, string>           list_last_exchange_rates()const;
@@ -1002,6 +1015,29 @@ vector<credit_object> database_api::fetch_credit_requests_stack( uint32_t from_i
                                              cyrrency_symbol, user_id, status );    
 }                                                                  
 
+vector<credit_object> database_api::fetch_credit_requests_stack_by_creditor( uint32_t from_index,
+                                                                      uint32_t elements_count,
+                                                                      uint32_t loan_persent_from,
+                                                                      uint32_t loan_persent_to,
+                                                                      uint32_t deposit_persent_from,
+                                                                      uint32_t deposit_persent_to,
+                                                                      uint32_t loan_volume_from,
+                                                                      uint32_t loan_volume_to,
+                                                                      std::string cyrrency_symbol,
+                                                                      std::string creditor_user_id,
+                                                                      uint32_t status
+                                                                    ) const
+{
+   return my->fetch_credit_requests_stack_by_creditor( from_index, elements_count, loan_persent_from, loan_persent_to, deposit_persent_from, 
+                                            deposit_persent_to, loan_volume_from, loan_volume_to, 
+                                             cyrrency_symbol, creditor_user_id, status );    
+}
+
+std::vector<karma_history_entry> database_api::list_account_history_of_karma(std::string account_id)const
+{
+    return my->list_account_history_of_karma(account_id);
+}
+
 map<string, string> database_api::list_last_exchange_rates()const
 {
     return my->list_last_exchange_rates();
@@ -1123,6 +1159,104 @@ vector<credit_object> database_api_impl::fetch_credit_requests_stack( uint32_t f
    }
    return result;    
 }                                        
+
+vector<credit_object> database_api_impl::fetch_credit_requests_stack_by_creditor( uint32_t from_index,
+                                                                      uint32_t elements_count,
+                                                                      uint32_t loan_persent_from,
+                                                                      uint32_t loan_persent_to,
+                                                                      uint32_t deposit_persent_from,
+                                                                      uint32_t deposit_persent_to,
+                                                                      uint32_t loan_volume_from,
+                                                                      uint32_t loan_volume_to,
+                                                                      std::string cyrrency_symbol,
+                                                                      std::string creditor_user_id,
+                                                                      uint32_t status
+                                                                    ) const
+{
+   const auto& request_by_time = _db.get_index_type<credit_index>( ).indices( ).get<by_request_creation_time>( );
+
+   vector<credit_object> result;
+   if( from_index > request_by_time.size( ) )
+        return result; 
+
+   result.reserve( elements_count );
+
+   auto b = request_by_time.rbegin( );
+   std::advance( b, from_index );
+   for( auto itr = b; itr != request_by_time.rend( ); itr++ )
+   {
+        const asset_object& loan_asset_type = ( *itr ).borrower.loan_asset.asset_id( _db );   
+        const asset_object& deposit_asset_type = ( *itr ).borrower.deposit_asset.asset_id( _db );   
+
+        if( creditor_user_id.size( ) > 0 )
+        {
+            auto creditor_account = lookup_account_names( {creditor_user_id} ).front( );
+            if( creditor_account.valid( ) )
+            {             
+                if( ( *itr ).creditor.creditor != creditor_account->id )
+                    continue;
+            }else     
+                continue;    
+        }
+
+        if( cyrrency_symbol.size( ) > 0 )
+        {
+            if( loan_asset_type.symbol != cyrrency_symbol )            
+                 continue;
+        }
+ 
+        if( status != e_credit_object_status::fetch_all )
+        {
+            if( ( *itr ).status != status )          
+                continue; 
+        }
+
+        if( ( *itr ).borrower.loan_persent < loan_persent_from )     
+            continue;
+          
+        if( ( *itr ).borrower.loan_persent > loan_persent_to )    
+            continue;
+ 
+        double loan_amount = loan_asset_type.amount_to_real( ( *itr ).borrower.loan_asset.amount );
+        if( loan_amount < ( double )loan_volume_from )       
+            continue;
+              
+        if( loan_amount > ( double )loan_volume_to )
+            continue;
+ 
+        double deposit_amount = deposit_asset_type.amount_to_real( ( *itr ).borrower.deposit_asset.amount ); 
+        if( deposit_amount < ( double )deposit_persent_from )       
+            continue;
+             
+        if( deposit_amount > ( double )deposit_persent_to )      
+            continue;
+ 
+        result.emplace_back( *itr );
+
+        if( result.size( ) >= elements_count )
+            break;
+   }
+   return result;    
+}
+
+std::vector<karma_history_entry> database_api_impl::list_account_history_of_karma(std::string account_id)const
+{
+    std::vector<karma_history_entry> result;
+    const auto& account_history_of_karma_objs = _db.get_index_type<account_history_of_karma_index>().indices().get<by_id>();
+    auto account = lookup_account_names( {account_id} ).front( );
+    if(account.valid())
+    {
+        for (auto const& history : account_history_of_karma_objs)
+        {
+            if(account->id == history.account)
+            {
+                result = history.get_karma_history();
+                return result;
+            }
+        }
+    }
+    return result;
+}
 
 map<string, string> database_api_impl::list_last_exchange_rates()const
 {

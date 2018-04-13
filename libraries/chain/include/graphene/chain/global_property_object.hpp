@@ -45,6 +45,9 @@ namespace graphene { namespace chain {
          static const uint8_t space_id = implementation_ids;
          static const uint8_t type_id  = impl_global_property_object_type;
 
+         string revision_sha;
+         string revision_timestamp;
+
          chain_parameters           parameters;
          optional<chain_parameters> pending_parameters;
 
@@ -141,6 +144,8 @@ FC_REFLECT_DERIVED( graphene::chain::dynamic_global_property_object, (graphene::
                   )
 
 FC_REFLECT_DERIVED( graphene::chain::global_property_object, (graphene::db::object),
+                    (revision_sha)
+                    (revision_timestamp)
                     (parameters)
                     (pending_parameters)
                     (next_available_vote_id)

@@ -73,6 +73,7 @@ namespace graphene { namespace chain {
          optional< special_authority > owner_special_authority;
          optional< special_authority > active_special_authority;
          optional< buyback_account_options > buyback_options;
+         optional< account_id_type> credit_referrer;
       };
 
       struct fee_parameters_type
@@ -291,7 +292,7 @@ FC_REFLECT(graphene::chain::account_options, (memo_key)(voting_account)(num_witn
 FC_REFLECT_ENUM( graphene::chain::account_whitelist_operation::account_listing,
                 (no_listing)(white_listed)(black_listed)(white_and_black_listed))
 
-FC_REFLECT(graphene::chain::account_create_operation::ext, (null_ext)(owner_special_authority)(active_special_authority)(buyback_options) )
+FC_REFLECT(graphene::chain::account_create_operation::ext, (null_ext)(owner_special_authority)(active_special_authority)(buyback_options)(credit_referrer) )
 FC_REFLECT( graphene::chain::account_create_operation,
             (fee)(registrar)
             (referrer)(referrer_percent)

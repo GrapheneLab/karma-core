@@ -316,6 +316,8 @@ static void get_relevant_accounts( const object* obj, flat_set<account_id_type>&
            break;
         } case exchange_rate_object_type:{
            break;
+        } case account_history_of_karma_object_type:{
+           break;
         }
       }
    }

@@ -937,6 +937,9 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
          chain_parameters::ext::credit_options new_credit_options = p.parameters.get_credit_options(); 
          p.parameters.set_credit_options(new_credit_options);
          
+         chain_parameters::ext::credit_referrer_bonus_options new_bonus_options = p.parameters.get_bonus_options(); 
+         p.parameters.set_bonus_options(new_bonus_options);
+         
          p.pending_parameters.reset();
       }
    });

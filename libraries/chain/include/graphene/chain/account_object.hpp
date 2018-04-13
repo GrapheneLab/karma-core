@@ -68,6 +68,13 @@ namespace graphene { namespace chain {
         };
 
 
+      struct karma_history_entry
+      {
+          time_point_sec date;
+          float          amount;
+          std::string    info;  
+      };      
+
    /**
     * @class account_statistics_object
     * @ingroup object
@@ -152,6 +159,36 @@ namespace graphene { namespace chain {
    };
 
    /**
+    * @class account_history_of_karma_object
+    * @ingroup object
+    * @ingroup implementation
+    *
+    * This object contains history of karma (rating)    
+    */
+   class account_history_of_karma_object : public abstract_object<account_history_of_karma_object>
+   {
+      public:
+         static const uint8_t space_id = protocol_ids;
+         static const uint8_t type_id  = account_history_of_karma_object_type;
+
+      account_id_type account;      
+      std::vector<karma_history_entry> karma_history;
+      extensions_type            extensions;
+
+      std::vector<karma_history_entry> get_karma_history()const { return karma_history; }
+      void add_history_entry(time_point_sec date, float amount, std::string info) 
+      {
+            karma_history_entry entry; 
+            entry.date = date;
+            entry.amount = amount;
+            entry.info = info; 
+            karma_history.push_back(entry); 
+      }
+   };
+
+      void update_account_karma(graphene::chain::database* db, account_id_type id, float amount, std::string info);
+
+   /**
     * @brief This class represents an account on the object graph
     * @ingroup object
     * @ingroup protocol
@@ -194,7 +231,7 @@ namespace graphene { namespace chain {
          string name;
 
          // Karma.
-         uint32_t karma;
+         float karma = 1.0;
 
          // Personal info.
           personal_info pi;
@@ -275,6 +312,9 @@ namespace graphene { namespace chain {
           */
          optional< flat_set<asset_id_type> > allowed_assets;
 
+         account_id_type credit_referrer;
+         time_point_sec credit_referrer_expiration_date;
+
          bool has_special_authority()const
          {
             return (owner_special_authority.which() != special_authority::tag< no_special_authority >::value)
@@ -311,6 +351,8 @@ namespace graphene { namespace chain {
          }
 
          account_id_type get_id()const { return id; }
+
+         void update_karma(float amount);
    };
 
    /**
@@ -415,6 +457,20 @@ namespace graphene { namespace chain {
     */
    typedef generic_index<account_object, account_multi_index_type> account_index;
 
+   /**
+    * @ingroup object_index
+    */
+   typedef multi_index_container<
+      account_history_of_karma_object,
+      indexed_by<
+         ordered_unique< tag<by_id>, member< object, object_id_type, &object::id > >
+      >
+   > history_of_karma_multi_index_type;
+
+   /**
+    * @ingroup object_index
+    */
+   typedef generic_index<account_history_of_karma_object, history_of_karma_multi_index_type> account_history_of_karma_index;
 }}
 
 FC_REFLECT( graphene::chain::personal_info, (login)(email)(firstName)(lastName)(facebook)(mobile)(taxResidence) )
@@ -422,6 +478,8 @@ FC_REFLECT( graphene::chain::personal_info, (login)(email)(firstName)(lastName)(
 FC_REFLECT( graphene::chain::bank_account, (bankName)(bankSwift)(bankAccount)(bankBenificiary) )
 
 FC_REFLECT( graphene::chain::additional_info, (about)(companyName)(companyActivity)(companyVat)(companyWebsite)(companyYoutube)(companyPdf) )
+
+FC_REFLECT( graphene::chain::karma_history_entry, (date)(amount)(info) )
 
 FC_REFLECT_DERIVED( graphene::chain::account_object,
                     (graphene::db::object),
@@ -433,6 +491,8 @@ FC_REFLECT_DERIVED( graphene::chain::account_object,
                     (owner_special_authority)(active_special_authority)
                     (top_n_control_flags)
                     (allowed_assets)
+                    (credit_referrer)
+                    (credit_referrer_expiration_date)
                     )
 
 FC_REFLECT_DERIVED( graphene::chain::account_balance_object,
@@ -448,4 +508,8 @@ FC_REFLECT_DERIVED( graphene::chain::account_statistics_object,
                     (lifetime_fees_paid)
                     (pending_fees)(pending_vested_fees)
                   )
+
+FC_REFLECT_DERIVED( graphene::chain::account_history_of_karma_object,
+                    (graphene::db::object),
+                    (account)(karma_history)(extensions) )
 

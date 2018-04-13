@@ -147,6 +147,20 @@ class database_api
                                                                       std::string user_id,
                                                                       uint32_t status
                                                                     ) const;
+      vector<credit_object> fetch_credit_requests_stack_by_creditor( uint32_t from_index,
+                                                                      uint32_t elements_count,
+                                                                      uint32_t loan_persent_from,
+                                                                      uint32_t loan_persent_to,
+                                                                      uint32_t deposit_persent_from,
+                                                                      uint32_t deposit_persent_to,
+                                                                      uint32_t loan_volume_from,
+                                                                      uint32_t loan_volume_to,
+                                                                      std::string cyrrency_symbol,
+                                                                      std::string creditor_user_id,
+                                                                      uint32_t status
+                                                                    ) const;                                                                    
+
+      std::vector<karma_history_entry> list_account_history_of_karma(std::string account_id)const;
 
       map<string, string> list_last_exchange_rates()const;
       map< std::string, std::map< account_id_type, string >> list_current_exchange_rates()const;
@@ -704,7 +718,10 @@ FC_API(graphene::app::database_api,
     // Creadit requests 
    (list_credit_requests_stack)
    (fetch_credit_requests_stack)
+   (fetch_credit_requests_stack_by_creditor)
    (list_credit_request_by_uuid)
+
+   (list_account_history_of_karma)
 
     // Exchange rate request
    (list_last_exchange_rates)

@@ -136,6 +136,7 @@ namespace graphene { namespace chain {
       balance_object_type,
       credit_object_type,
       exchange_rate_object_type,
+      account_history_of_karma_object_type,
       OBJECT_TYPE_COUNT ///< Sentry value which contains the number of different object types
    };
 
@@ -180,6 +181,7 @@ namespace graphene { namespace chain {
    class blinded_balance_object;
    class credit_object;
    class exchange_rate_object;
+   class account_history_of_karma_object;
 
    typedef object_id< protocol_ids, account_object_type,            account_object>               account_id_type;
    typedef object_id< protocol_ids, asset_object_type,              asset_object>                 asset_id_type;
@@ -197,6 +199,7 @@ namespace graphene { namespace chain {
    typedef object_id< protocol_ids, balance_object_type,            balance_object>               balance_id_type;
    typedef object_id< protocol_ids, credit_object_type,             credit_object>                credit_id_type;
    typedef object_id< protocol_ids, exchange_rate_object_type,      exchange_rate_object>         exchange_rate_id_type;
+   typedef object_id< protocol_ids, account_history_of_karma_object_type, account_history_of_karma_object> account_history_of_karma_id_type;
 
    // implementation types
    class global_property_object;
@@ -350,6 +353,7 @@ FC_REFLECT_ENUM( graphene::chain::object_type,
                  (balance_object_type)
                  (credit_object_type)
                  (exchange_rate_object_type)
+                 (account_history_of_karma_object_type)
                  (OBJECT_TYPE_COUNT)
                )
 FC_REFLECT_ENUM( graphene::chain::impl_object_type,

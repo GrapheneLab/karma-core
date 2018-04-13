@@ -48,6 +48,16 @@ namespace graphene { namespace chain {
 
 #define DEPOSIT_PERSENT 300  
 
+#define KARMA_MIN_VALUE 0.0
+#define KARMA_MAX_VALUE 5.0
+#define KARMA_BONUS_FOR_ACCOUNT_CREATE    1.0
+#define KARMA_BONUS_FOR_MONTHLY_PAYMENT   0.05
+#define KARMA_BONUS_FOR_CREDIT_PAYMENT    0.2
+#define KARMA_PENALTY_FOR_MONTHLY_DELAY  -0.1
+#define KARMA_PENALTY_FOR_CREDIT_DEFAULT -0.5
+
+#define SPECIAL_CONVERSION_ACCOUNT "karma"
+
    struct borrower_info
    {
       account_id_type borrower; // borrower     
