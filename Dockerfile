@@ -27,6 +27,7 @@ RUN \
     #git submodule update --init --recursive && \
     echo && echo '------ Obtain version ------' && \
     mkdir -v  /etc/bitshares /var/lib/bitshares && \
+    git submodule update --init --recursive && \
     git rev-parse --short HEAD > /etc/bitshares/version && \
 
     #
