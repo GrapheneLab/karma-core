@@ -24,7 +24,6 @@ RUN \
       fish && \
     #
     # Obtain version
-    #git submodule update --init --recursive && \
     echo && echo '------ Obtain version ------' && \
     mkdir -v  /etc/bitshares /var/lib/bitshares && \
     git submodule update --init --recursive && \
